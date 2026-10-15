@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  /* Scales every rem-based Tailwind size up ~10% site-wide */
+  font-size: 110%;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900;
+}
+
+/*
+ * Bootstrap-style buttons:
+ * .375rem radius, .375rem/.75rem padding, 400 weight, 150ms ease-in-out
+ * transition, focus ring, pressed state, disabled state.
+ */
+button {
+  @apply rounded-md px-3 py-1.5 font-medium
+    transition duration-150 ease-in-out
+    focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1
+    disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+/* Hover = the emblem's gold, with dark text for contrast */
+button:not(:disabled):hover {
+  @apply bg-amber-400 text-gray-900;
+  filter: none;
+}
+
+button:not(:disabled):active {
+  filter: brightness(0.85);
+}
+
+/* Links get a consistent hover */
+a:not([class*="bg-"]):hover {
+  filter: brightness(0.9);
+}
+
+/* Gentle vertical drift used by the login page's background decor */
+@keyframes float-y {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-26px) rotate(4deg);
+  }
+}
+
+.animate-float {
+  animation: float-y 6s ease-in-out infinite;
+}
