@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api from '../../api/client';
+import api, { fileUrl } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 
 const EMPTY = { first_name: '', last_name: '', email: '', password: '', role: 'student', mobile_number: '', picFile: null };
@@ -289,7 +289,7 @@ export default function Users() {
               <td>
                 <span className="flex items-center gap-2">
                   {u.profile_pic ? (
-                    <img src={u.profile_pic} alt=""
+                    <img src={fileUrl(u.profile_pic)} alt=""
                       className="h-7 w-7 rounded-full object-cover border" />
                   ) : (
                     <span className="h-7 w-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
@@ -351,7 +351,7 @@ export default function Users() {
             <label className="block text-xs text-gray-500 mb-1">Profile picture</label>
             <div className="flex items-center gap-3 mb-3">
               {editForm.profile_pic && !editForm.picFile && (
-                <img src={editForm.profile_pic} alt=""
+                <img src={fileUrl(editForm.profile_pic)} alt=""
                   className="h-10 w-10 rounded-full object-cover border" />
               )}
               <input type="file" accept="image/*" className="text-xs"

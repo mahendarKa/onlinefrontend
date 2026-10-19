@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
-import api from '../../api/client';
+import api, { fileUrl } from '../../api/client';
 
 function PieChart({ detail }) {
   // Older detail payloads lack pending/no_verdict — fall back to
@@ -87,7 +87,7 @@ function AnswerReview({ q, index }) {
       <p className="text-sm mb-2 whitespace-pre-wrap">{q.question_text}</p>
 
       {(q.images || []).map((img, i) => (
-        <img key={i} src={img.image_url} alt={img.alt_text || q.name}
+        <img key={i} src={fileUrl(img.image_url)} alt={img.alt_text || q.name}
           className="mb-2 max-h-40 rounded border" />
       ))}
 
@@ -107,7 +107,7 @@ function AnswerReview({ q, index }) {
               }`}
             >
               {o.image_url && (
-                <img src={o.image_url} alt={o.option_text || 'option'}
+                <img src={fileUrl(o.image_url)} alt={o.option_text || 'option'}
                   className="h-14 object-contain rounded" />
               )}
               {o.option_text}

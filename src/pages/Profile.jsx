@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api from '../api/client';
+import api, { fileUrl } from '../api/client';
 
 const AVATAR_COLORS = [
   'bg-blue-600', 'bg-blue-800', 'bg-amber-500',
@@ -16,7 +16,7 @@ function Avatar({ first, last, pic, size = 'h-20 w-20 text-2xl' }) {
   const fullName = [first, last].filter(Boolean).join(' ');
   if (pic) {
     return (
-      <img src={pic} alt={fullName}
+      <img src={fileUrl(pic)} alt={fullName}
         className={`${size} rounded-full object-cover border-2 border-blue-200`} />
     );
   }

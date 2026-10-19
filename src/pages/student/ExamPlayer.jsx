@@ -4,7 +4,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { python } from '@codemirror/lang-python';
 import { java } from '@codemirror/lang-java';
 import { javascript } from '@codemirror/lang-javascript';
-import api from '../../api/client';
+import api, { fileUrl } from '../../api/client';
 import { apiDate } from '../../utils/datetime';
 
 function Timer({ deadline, onExpire }) {
@@ -398,7 +398,7 @@ function AnswerInput({ question, saved, onChange, examId, attemptId }) {
               onChange={() => onChange({ selected_option_id: o.id })}
             />
             {o.image_url && (
-              <img src={o.image_url} alt={o.option_text || 'option'}
+              <img src={fileUrl(o.image_url)} alt={o.option_text || 'option'}
                 className="h-28 object-contain" />
             )}
             {o.option_text && <span className="text-sm">{o.option_text}</span>}
@@ -733,7 +733,7 @@ export default function ExamPlayer() {
             {(q.images || []).map((img) => (
               <img
                 key={img.id}
-                src={img.image_url}
+                src={fileUrl(img.image_url)}
                 alt={img.alt_text || q.name}
                 className="mb-4 max-h-72 rounded border"
               />

@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '../api/client';
+import api, { fileUrl } from '../api/client';
 
 // Inline SVG icons keyed by route (24x24 outline style).
 const ICONS = {
@@ -89,7 +89,7 @@ const COMMON_NAV = [
 function Avatar({ first, last, pic }) {
   if (pic) {
     return (
-      <img src={pic} alt={[first, last].filter(Boolean).join(' ')}
+      <img src={fileUrl(pic)} alt={[first, last].filter(Boolean).join(' ')}
         className="h-8 w-8 rounded-full object-cover border border-gray-200" />
     );
   }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api from '../api/client';
+import api, { fileUrl } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
 const TYPES = [
@@ -891,7 +891,7 @@ export default function Questions() {
                   {form.type === 'image' && (
                     <div className="flex items-center gap-1 flex-1">
                       {o.image_preview && (
-                        <img src={o.image_preview} alt=""
+                        <img src={fileUrl(o.image_preview)} alt=""
                           className="h-10 w-10 object-contain rounded border" />
                       )}
                       <input type="file" accept="image/*" aria-label={`Option ${i + 1} image`}
@@ -943,7 +943,7 @@ export default function Questions() {
                       <div className="flex flex-wrap gap-2 mb-2">
                         {editImages.map((img) => (
                           <div key={img.id} className="relative border rounded p-1">
-                            <img src={img.image_url} alt={img.alt_text || ''}
+                            <img src={fileUrl(img.image_url)} alt={img.alt_text || ''}
                               className="h-16 object-contain" />
                             <button type="button" title="Remove image"
                               onClick={() => setEditImages(editImages.filter((x) => x.id !== img.id))}
