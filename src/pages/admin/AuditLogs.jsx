@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/client';
+import { apiDate } from '../../utils/datetime';
 
 const PAGE_SIZE = 20;
 
 function fmt(dt) {
-  return new Date(dt).toLocaleString(undefined, {
+  return apiDate(dt).toLocaleString(undefined, {
     day: '2-digit', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit', second: '2-digit',
   });

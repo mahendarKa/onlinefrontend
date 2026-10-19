@@ -2,9 +2,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
-
-// Naive local datetime -- backend compares with datetime.now().
-const toLocal = (v) => (v ? v : null);
+import { apiDate, toApiUtc, toLocalInput } from '../utils/datetime';
 
 const nowLocal = () => {
   const d = new Date();
@@ -165,8 +163,8 @@ export default function ExamDetail() {
     try {
       await api.post(`/exams/${examId}/batches`, {
         batch_id: Number(bForm.batch_id),
-        start_time: toLocal(bForm.start_time),
-        end_time: toLocal(bForm.end_time),
+        start_time: toApiUtc(bForm.start_time),
+        end_time: toApiUtc(bForm.end_time),
         grader_ids: [...bForm.graders],
       });
       setBForm({ batch_id: '', start_time: '', end_time: '', graders: new Set() });
@@ -354,14 +352,14 @@ export default function ExamDetail() {
             )}
             <div className="flex flex-wrap gap-2">
               <input type="datetime-local"
-                min={exam.start_time ? exam.start_time.slice(0, 16) : nowLocal()}
-                max={exam.end_time ? exam.end_time.slice(0, 16) : undefined}
+                min={exam.start_time ? toLocalInput(exam.start_time) : nowLocal()}
+                max={exam.end_time ? toLocalInput(exam.end_time) : undefined}
                 value={bForm.start_time}
                 onChange={(e) => setBForm({ ...bForm, start_time: e.target.value })}
                 className="border rounded px-2 py-1.5 flex-1 min-w-40 text-sm" />
               <input type="datetime-local"
-                min={bForm.start_time || (exam.start_time ? exam.start_time.slice(0, 16) : nowLocal())}
-                max={exam.end_time ? exam.end_time.slice(0, 16) : undefined}
+                min={bForm.start_time || (exam.start_time ? toLocalInput(exam.start_time) : nowLocal())}
+                max={exam.end_time ? toLocalInput(exam.end_time) : undefined}
                 value={bForm.end_time}
                 onChange={(e) => setBForm({ ...bForm, end_time: e.target.value })}
                 className="border rounded px-2 py-1.5 flex-1 min-w-40 text-sm" />
@@ -370,7 +368,7 @@ export default function ExamDetail() {
             <p className="text-xs text-gray-400 mt-1">
               Batch times must be inside the exam window
               {exam.start_time || exam.end_time
-                ? ` (${exam.start_time ? `opens ${new Date(exam.start_time).toLocaleString()}` : 'always open'} – ${exam.end_time ? `closes ${new Date(exam.end_time).toLocaleString()}` : 'never closes'}).`
+                ? ` (${exam.start_time ? `opens ${apiDate(exam.start_time).toLocaleString()}` : 'always open'} – ${exam.end_time ? `closes ${apiDate(exam.end_time).toLocaleString()}` : 'never closes'}).`
                 : '. Leave times empty to use the exam schedule.'}
             </p>
           </form>)}
