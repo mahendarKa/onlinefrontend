@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../api/client';
+import { apiDate } from '../utils/datetime';
 
 const TYPE_STYLES = {
   'exam.assigned': 'bg-blue-100 text-blue-700',
@@ -9,7 +10,7 @@ const TYPE_STYLES = {
 };
 
 function fmt(dt) {
-  return new Date(dt).toLocaleString(undefined, {
+  return apiDate(dt).toLocaleString(undefined, {
     day: '2-digit', month: 'short', year: 'numeric',
     hour: 'numeric', minute: '2-digit', hour12: true,
   });

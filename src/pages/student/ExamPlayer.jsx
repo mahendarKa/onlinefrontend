@@ -5,6 +5,7 @@ import { python } from '@codemirror/lang-python';
 import { java } from '@codemirror/lang-java';
 import { javascript } from '@codemirror/lang-javascript';
 import api from '../../api/client';
+import { apiDate } from '../../utils/datetime';
 
 function Timer({ deadline, onExpire }) {
   const [remaining, setRemaining] = useState(
@@ -495,10 +496,10 @@ export default function ExamPlayer() {
       const examInfo = dash.data.find((x) => x.exam_id === Number(examId));
       if (attempt?.start_time && examInfo) {
         const durationEnd =
-          new Date(attempt.start_time).getTime() +
+          apiDate(attempt.start_time).getTime() +
           examInfo.duration_minutes * 60 * 1000;
         const windowEnd = examInfo.end_time
-          ? new Date(examInfo.end_time).getTime()
+          ? apiDate(examInfo.end_time).getTime()
           : Infinity;
         setDeadline(Math.min(durationEnd, windowEnd));
       }

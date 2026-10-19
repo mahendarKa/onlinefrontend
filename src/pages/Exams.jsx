@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { toApiUtc, toLocalInput } from '../utils/datetime';
 
 const EMPTY = {
   course_id: '',
@@ -14,11 +15,6 @@ const EMPTY = {
   attempts_allowed: null,
   shuffle_questions: false,
 };
-
-// Send the naive local datetime string ("YYYY-MM-DDTHH:MM").
-// Backend compares with datetime.now() which is also local/naive,
-// so converting with toISOString() would shift times to UTC.
-const toLocal = (v) => (v ? v : null);
 
 const nowLocal = () => {
   const d = new Date();
@@ -74,8 +70,8 @@ export default function Exams() {
       duration_minutes: Number(form.duration_minutes),
       passing_percentage: Number(form.passing_percentage),
       attempts_allowed: Number(form.attempts_allowed),
-      start_time: toLocal(form.start_time),
-      end_time: toLocal(form.end_time),
+      start_time: toApiUtc(form.start_time),
+      end_time: toApiUtc(form.end_time),
     };
     try {
       if (editId) {
@@ -107,9 +103,9 @@ export default function Exams() {
       description: exam.description || '',
       duration_minutes: exam.duration_minutes,
       passing_percentage: exam.passing_percentage ?? '',
-      // datetime-local needs "YYYY-MM-DDTHH:MM"
-      start_time: exam.start_time ? exam.start_time.slice(0, 16) : '',
-      end_time: exam.end_time ? exam.end_time.slice(0, 16) : '',
+      // datetime-local needs "YYYY-MM-DDTHH:MM" in local time
+      start_time: toLocalInput(exam.start_time),
+      end_time: toLocalInput(exam.end_time),
       attempts_allowed: exam.attempts_allowed || 1,
       shuffle_questions: !!exam.shuffle_questions,
     });

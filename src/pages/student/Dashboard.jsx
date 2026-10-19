@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/client';
+import { apiDate } from '../../utils/datetime';
 
 const STATUS_STYLE = {
   available: 'bg-green-100 text-green-700',
@@ -64,8 +65,8 @@ export default function Dashboard() {
             <div className="text-xs text-gray-500 space-y-1 mb-3">
               <p>Duration: {exam.duration_minutes} min · {exam.total_marks} marks (pass: {exam.passing_percentage ?? exam.passing_marks}%)</p>
               <p>Attempts: {exam.attempts_used} / {exam.attempts_allowed ?? '∞'}</p>
-              {exam.start_time && <p>Opens: {new Date(exam.start_time).toLocaleString()}</p>}
-              {exam.end_time && <p>Closes: {new Date(exam.end_time).toLocaleString()}</p>}
+              {exam.start_time && <p>Opens: {apiDate(exam.start_time).toLocaleString()}</p>}
+              {exam.end_time && <p>Closes: {apiDate(exam.end_time).toLocaleString()}</p>}
             </div>
             {(exam.status === 'available' || exam.status === 'in_progress') && (
               <button
