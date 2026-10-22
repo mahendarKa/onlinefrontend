@@ -230,7 +230,9 @@ export default function Layout() {
         )}
       </aside>
 
-      <div className={`flex-1 flex flex-col ${collapsed ? 'md:ml-20' : 'md:ml-56'}`}>
+      {/* min-w-0 lets this flex child shrink so wide page content scrolls
+          inside <main> instead of overflowing the viewport horizontally. */}
+      <div className={`flex-1 min-w-0 flex flex-col ${collapsed ? 'md:ml-20' : 'md:ml-56'}`}>
         <header className="bg-white border-b px-6 py-3 flex items-center justify-between">
           <Link to="/profile" className="flex items-center gap-2 group">
             <Avatar first={me?.first_name} last={me?.last_name}

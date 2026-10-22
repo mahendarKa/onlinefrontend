@@ -215,7 +215,7 @@ export default function ExamDetail() {
       {message && <p className="mb-3 text-sm text-green-600 bg-green-50 p-2 rounded">{message}</p>}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-white rounded shadow p-4">
+        <div className="bg-white rounded shadow p-4 min-w-0">
           <h2 className="font-bold mb-3">Questions ({examQuestions.length})</h2>
 
           {canEdit && (<div className="flex flex-wrap items-center gap-2 mb-2">
@@ -289,6 +289,7 @@ export default function ExamDetail() {
             )}
           </div>)}
 
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <tbody>
               {examQuestions.map((eq) => {
@@ -313,9 +314,10 @@ export default function ExamDetail() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
 
-        <div className="bg-white rounded shadow p-4">
+        <div className="bg-white rounded shadow p-4 min-w-0">
           <h2 className="font-bold mb-3">Assigned Batches ({examBatches.length})</h2>
           {canEdit && (<form onSubmit={assignBatch} className="mb-3">
             <div className="flex gap-2 mb-2">
@@ -372,6 +374,7 @@ export default function ExamDetail() {
                 : '. Leave times empty to use the exam schedule.'}
             </p>
           </form>)}
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <tbody>
               {examBatches.map((eb) => {
@@ -440,6 +443,7 @@ export default function ExamDetail() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>
