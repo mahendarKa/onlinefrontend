@@ -5,12 +5,12 @@ import { useAuth } from '../../context/AuthContext';
 const EMPTY = { first_name: '', last_name: '', email: '', password: '', role: 'student', mobile_number: '', picFile: null };
 const ROLES = ['student', 'teacher', 'admin', 'superadmin'];
 
-// Matches the backend rule: optional, but >=10 digits when given.
+// Matches the backend rule: optional, but exactly 10 digits when given.
 const mobileError = (v) => {
   const t = (v || '').trim();
   if (!t) return '';
   const digits = t.replace(/\D/g, '').length;
-  return digits < 10 ? 'Mobile number must be at least 10 digits' : '';
+  return digits !== 10 ? 'Mobile number must be exactly 10 digits' : '';
 };
 
 export default function Users() {
@@ -228,7 +228,7 @@ export default function Users() {
           <p className="mt-2 text-xs text-gray-500">
             CSV columns: <code className="bg-gray-100 px-1 rounded">first_name,last_name,email,password,role,mobile_number</code>
             {' '}&mdash; last_name, role and mobile_number are optional (role defaults to student).
-            mobile_number must be at least 10 digits. Duplicate emails are skipped.
+            mobile_number must be exactly 10 digits. Duplicate emails are skipped.
           </p>
 
           {bulkResult && (
