@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api from '../../api/client';
+import api, { detailText } from '../../api/client';
 import { apiDate } from '../../utils/datetime';
 
 const PAGE_SIZE = 20;
@@ -29,7 +29,7 @@ export default function AuditLogs() {
       setData(data);
       setError('');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load audit logs');
+      setError(detailText(err, 'Failed to load audit logs'));
     } finally {
       setLoading(false);
     }

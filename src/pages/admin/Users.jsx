@@ -1,9 +1,17 @@
 import { useEffect, useState } from 'react';
-import api, { fileUrl } from '../../api/client';
+import api, { fileUrl, detailText } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 
 const EMPTY = { first_name: '', last_name: '', email: '', password: '', role: 'student', mobile_number: '', picFile: null };
 const ROLES = ['student', 'teacher', 'admin', 'superadmin'];
+
+// Matches the backend rule: optional, but >=10 digits when given.
+const mobileError = (v) => {
+  const t = (v || '').trim();
+  if (!t) return '';
+  const digits = t.replace(/\D/g, '').length;
+  return digits < 10 ? 'Mobile number must be at least 10 digits' : '';
+};
 
 export default function Users() {
   const { user: me } = useAuth();
@@ -40,6 +48,11 @@ export default function Users() {
 
   const createUser = async (e) => {
     e.preventDefault();
+    const mErr = mobileError(form.mobile_number);
+    if (mErr) {
+      setError(mErr);
+      return;
+    }
     setError('');
     try {
       const payload = {
@@ -56,7 +69,7 @@ export default function Users() {
       setShowForm(false);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to create user');
+      setError(detailText(err, 'Failed to create user'));
     }
   };
 
@@ -72,6 +85,11 @@ export default function Users() {
 
   const saveEdit = async (e) => {
     e.preventDefault();
+    const mErr = mobileError(editForm.mobile_number);
+    if (mErr) {
+      setError(mErr);
+      return;
+    }
     setError('');
     try {
       const payload = {
@@ -87,7 +105,7 @@ export default function Users() {
       setEditId(null);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Update failed');
+      setError(detailText(err, 'Update failed'));
     }
   };
 
@@ -96,7 +114,7 @@ export default function Users() {
       await api.put(`/users/admin/${id}/status`);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Status change failed');
+      setError(detailText(err, 'Status change failed'));
     }
   };
 
@@ -120,7 +138,7 @@ export default function Users() {
       setBulkResult(data);
       if (data.created_count > 0) load();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Bulk upload failed');
+      setError(detailText(err, 'Bulk upload failed'));
     } finally {
       setBulkLoading(false);
       setUploadPct(null);
@@ -148,7 +166,7 @@ export default function Users() {
       await api.delete(`/users/${id}`);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Delete failed');
+      setError(detailText(err, 'Delete failed'));
     }
   };
 
@@ -210,7 +228,7 @@ export default function Users() {
           <p className="mt-2 text-xs text-gray-500">
             CSV columns: <code className="bg-gray-100 px-1 rounded">first_name,last_name,email,password,role,mobile_number</code>
             {' '}&mdash; last_name, role and mobile_number are optional (role defaults to student).
-            Duplicate emails are skipped.
+            mobile_number must be at least 10 digits. Duplicate emails are skipped.
           </p>
 
           {bulkResult && (

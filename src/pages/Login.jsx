@@ -1,6 +1,7 @@
 ﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { detailText } from '../api/client';
 
 export default function Login() {
   const { login } = useAuth();
@@ -17,7 +18,7 @@ export default function Login() {
       await login(form.email, form.password);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Login failed');
+      setError(detailText(err, 'Login failed'));
     } finally {
       setLoading(false);
     }

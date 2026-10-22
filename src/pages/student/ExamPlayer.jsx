@@ -4,7 +4,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { python } from '@codemirror/lang-python';
 import { java } from '@codemirror/lang-java';
 import { javascript } from '@codemirror/lang-javascript';
-import api, { fileUrl } from '../../api/client';
+import api, { fileUrl, detailText } from '../../api/client';
 import { apiDate } from '../../utils/datetime';
 
 function Timer({ deadline, onExpire }) {
@@ -67,7 +67,7 @@ function CodingEditor({ question, saved, onChange, examId, attemptId }) {
       setRunResult(data);
     } catch (err) {
       setRunResult({
-        error: err.response?.data?.detail || 'Could not run the code',
+        error: detailText(err, 'Could not run the code'),
       });
     } finally {
       setRunning(false);
@@ -480,7 +480,7 @@ export default function ExamPlayer() {
         a.data.forEach((ans) => { map[ans.question_id] = ans; });
         setAnswers(map);
       } catch (err) {
-        setLoadError(err.response?.data?.detail || 'Failed to load exam');
+        setLoadError(detailText(err, 'Failed to load exam'));
       }
     };
     load();
@@ -538,7 +538,7 @@ export default function ExamPlayer() {
         navigate('/dashboard');
         return;
       }
-      alert(typeof detail === 'string' ? detail : 'Submit failed');
+      alert(detailText(err, 'Submit failed'));
       setSubmitting(false);
     }
   };
@@ -561,7 +561,7 @@ export default function ExamPlayer() {
         navigate('/dashboard');
         return;
       }
-      setFbError(typeof d === 'string' ? d : 'Could not save feedback');
+      setFbError(detailText(err, 'Could not save feedback'));
       setFbSaving(false);
     }
   };

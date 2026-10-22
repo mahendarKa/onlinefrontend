@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../api/client';
+import api, { detailText } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { toApiUtc, toLocalInput } from '../utils/datetime';
 
@@ -85,11 +85,7 @@ export default function Exams() {
       setEditId(null);
       load();
     } catch (err) {
-      setError(
-        typeof err.response?.data?.detail === 'string'
-          ? err.response.data.detail
-          : 'Failed to save exam'
-      );
+      setError(detailText(err, 'Failed to save exam'));
     }
   };
 

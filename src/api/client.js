@@ -16,6 +16,29 @@ const api = axios.create({ baseURL });
 export const fileUrl = (u) =>
   u && u.startsWith('/') ? `${apiOrigin}${u}` : u;
 
+// FastAPI error bodies: HTTPException gives detail as a string, while
+// 422 validation failures give a list of {loc, msg} objects. Rendering
+// the list directly would crash React, so always go through this.
+export const detailText = (err, fallback = 'Request failed') => {
+  const d = err.response?.data?.detail;
+  if (typeof d === 'string' && d) return d;
+  if (Array.isArray(d) && d.length) {
+    const parts = d.map((e) => {
+      if (e && typeof e === 'object') {
+        const loc = (e.loc || [])
+          .filter((p) => !['body', 'query', 'path'].includes(p))
+          .join('.');
+        const msg = String(e.msg ?? 'Invalid value')
+          .replace(/^Value error, /, '');
+        return loc ? `${loc}: ${msg}` : msg;
+      }
+      return String(e);
+    }).join('; ');
+    if (parts) return parts;
+  }
+  return fallback;
+};
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {

@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
-import api from '../../api/client';
+import api, { detailText } from '../../api/client';
 
 const EMPTY_BATCH = { course_id: '', name: '', start_date: '', end_date: '', description: '' };
 
@@ -69,7 +69,7 @@ export default function Batches() {
       setEditId(null);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to save batch');
+      setError(detailText(err, 'Failed to save batch'));
     }
   };
 
@@ -110,7 +110,7 @@ export default function Batches() {
         await api.post('/batch-students/', { batch_id: selected.id, user_id: id });
         ok++;
       } catch (err) {
-        setError(`Failed to enroll user ${id}: ${err.response?.data?.detail || 'error'}`);
+        setError(`Failed to enroll user ${id}: ${detailText(err, 'error')}`);
       }
     }
     setCheckedStudents(new Set());
@@ -127,7 +127,7 @@ export default function Batches() {
         await api.post('/batch-teachers/', { batch_id: selected.id, user_id: id });
         ok++;
       } catch (err) {
-        setError(`Failed to assign user ${id}: ${err.response?.data?.detail || 'error'}`);
+        setError(`Failed to assign user ${id}: ${detailText(err, 'error')}`);
       }
     }
     setCheckedTeachers(new Set());

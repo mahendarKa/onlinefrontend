@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import api from '../api/client';
+import api, { detailText } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { apiDate, toApiUtc, toLocalInput } from '../utils/datetime';
 
@@ -96,7 +96,7 @@ export default function ExamDetail() {
         if (err.response?.status === 409) {
           skipped++;
         } else {
-          setError(`Question ${id}: ${err.response?.data?.detail || 'failed'}`);
+          setError(`Question ${id}: ${detailText(err, 'failed')}`);
         }
       }
     }
@@ -137,7 +137,7 @@ export default function ExamDetail() {
           if (err.response?.status === 409) {
             skipped++;
           } else {
-            setError(`Question ${qid}: ${err.response?.data?.detail || 'failed'}`);
+            setError(`Question ${qid}: ${detailText(err, 'failed')}`);
           }
         }
       }
@@ -148,7 +148,7 @@ export default function ExamDetail() {
       setRandCount('');
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Random selection failed');
+      setError(detailText(err, 'Random selection failed'));
     }
   };
 
@@ -170,7 +170,7 @@ export default function ExamDetail() {
       setBForm({ batch_id: '', start_time: '', end_time: '', graders: new Set() });
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to assign batch');
+      setError(detailText(err, 'Failed to assign batch'));
     }
   };
 
@@ -422,7 +422,7 @@ export default function ExamDetail() {
                                 setEditGraders(null);
                                 load();
                               } catch (err) {
-                                setError(err.response?.data?.detail || 'Failed to update graders');
+                                setError(detailText(err, 'Failed to update graders'));
                               }
                             }}
                               className="bg-blue-600 text-white px-3 py-1 rounded text-xs">Save graders</button>

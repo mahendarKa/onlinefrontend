@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
-import api from '../../api/client';
+import api, { detailText } from '../../api/client';
 
 const EMPTY = { name: '', code: '', description: '' };
 
@@ -30,7 +30,7 @@ export default function Courses() {
       setEditId(null);
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Save failed');
+      setError(detailText(err, 'Save failed'));
     }
   };
 

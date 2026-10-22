@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../api/client';
+import api, { detailText } from '../../api/client';
 import { apiDate } from '../../utils/datetime';
 
 const STATUS_STYLE = {
@@ -36,7 +36,7 @@ export default function Dashboard() {
       }
       navigate(`/exam/${exam.exam_id}/attempt/${data.attempt_id}`);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Unable to start exam');
+      setError(detailText(err, 'Unable to start exam'));
     }
   };
 

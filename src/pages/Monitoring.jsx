@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api from '../api/client';
+import api, { detailText } from '../api/client';
 
 export default function Monitoring() {
   const [exams, setExams] = useState([]);
@@ -39,7 +39,7 @@ export default function Monitoring() {
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Download failed');
+      setError(detailText(err, 'Download failed'));
     }
   };
 

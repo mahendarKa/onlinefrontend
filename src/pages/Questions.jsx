@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api, { fileUrl } from '../api/client';
+import api, { fileUrl, detailText } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
 const TYPES = [
@@ -102,7 +102,7 @@ export default function Questions() {
       setBulkResult(data);
       if (data.created_count > 0) load();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Bulk upload failed');
+      setError(detailText(err, 'Bulk upload failed'));
     } finally {
       setBulkLoading(false);
       setUploadPct(null);
@@ -566,11 +566,7 @@ export default function Questions() {
         cancelEdit();
         load();
       } catch (err) {
-        setError(
-          typeof err.response?.data?.detail === 'string'
-            ? err.response.data.detail
-            : 'Failed to update question'
-        );
+        setError(detailText(err, 'Failed to update question'));
       }
       return;
     }
@@ -720,11 +716,7 @@ export default function Questions() {
           await api.delete(`/questions/${createdId}`);
         } catch { /* ignore cleanup failure */ }
       }
-      setError(
-        typeof err.response?.data?.detail === 'string'
-          ? err.response.data.detail
-          : 'Failed to create question'
-      );
+      setError(detailText(err, 'Failed to create question'));
     }
   };
 
@@ -1018,7 +1010,7 @@ export default function Questions() {
                   className="border rounded px-3 py-1.5 w-32" />
               </div>
 
-              {form.type === 'calculated' && (
+              {CALC_TYPES.includes(form.type) && (
                 <div className="mt-2">
                   {datasets.map((d, i) => (
                     <div key={i} className="flex gap-2 mb-1">

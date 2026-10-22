@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api from '../api/client';
+import api, { detailText } from '../api/client';
 
 export default function Grading() {
   const [pending, setPending] = useState([]);
@@ -32,7 +32,7 @@ export default function Grading() {
       });
       load();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Evaluation failed');
+      setError(detailText(err, 'Evaluation failed'));
     }
   };
 

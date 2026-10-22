@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api from '../api/client';
+import api, { detailText } from '../api/client';
 
 // Read-only view for teachers: their batches and the students
 // enrolled in each one (list is already scoped by the backend).
@@ -39,7 +39,7 @@ export default function Batches() {
       setBatchStudents(bs.data);
       setBatchTeachers(bt.data);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load batch members');
+      setError(detailText(err, 'Failed to load batch members'));
     }
   };
 
