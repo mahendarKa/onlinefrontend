@@ -22,6 +22,9 @@ export default function Users() {
   const [editId, setEditId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [error, setError] = useState('');
+  // Errors belonging to the create/edit forms — rendered inside the
+  // form itself so they are visible even while the edit modal is open.
+  const [formError, setFormError] = useState('');
   const [showBulk, setShowBulk] = useState(false);
   const [csvFile, setCsvFile] = useState(null);
   const [bulkResult, setBulkResult] = useState(null);
@@ -50,10 +53,10 @@ export default function Users() {
     e.preventDefault();
     const mErr = mobileError(form.mobile_number);
     if (mErr) {
-      setError(mErr);
+      setFormError(mErr);
       return;
     }
-    setError('');
+    setFormError('');
     try {
       const payload = {
         first_name: form.first_name.trim(),
@@ -69,11 +72,12 @@ export default function Users() {
       setShowForm(false);
       load();
     } catch (err) {
-      setError(detailText(err, 'Failed to create user'));
+      setFormError(detailText(err, 'Failed to create user'));
     }
   };
 
   const startEdit = (u) => {
+    setFormError('');
     setEditId(u.id);
     setEditForm({
       first_name: u.first_name || '', last_name: u.last_name || '',
@@ -87,10 +91,10 @@ export default function Users() {
     e.preventDefault();
     const mErr = mobileError(editForm.mobile_number);
     if (mErr) {
-      setError(mErr);
+      setFormError(mErr);
       return;
     }
-    setError('');
+    setFormError('');
     try {
       const payload = {
         first_name: editForm.first_name.trim(),
@@ -105,7 +109,7 @@ export default function Users() {
       setEditId(null);
       load();
     } catch (err) {
-      setError(detailText(err, 'Update failed'));
+      setFormError(detailText(err, 'Update failed'));
     }
   };
 
@@ -190,7 +194,7 @@ export default function Users() {
             {showBulk ? 'Close' : 'Bulk Upload'}
           </button>
           <button
-            onClick={() => { setShowForm(!showForm); setShowBulk(false); }}
+            onClick={() => { setShowForm(!showForm); setShowBulk(false); setFormError(''); }}
             className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm"
           >
             {showForm ? 'Cancel' : 'New User'}
@@ -261,6 +265,9 @@ export default function Users() {
 
       {showForm && (
         <form onSubmit={createUser} className="bg-white p-4 rounded shadow mb-4 grid grid-cols-4 gap-3">
+          {formError && (
+            <p className="col-span-4 text-sm text-red-600 bg-red-50 p-2 rounded">{formError}</p>
+          )}
           <input required placeholder="First name" value={form.first_name}
             onChange={(e) => setForm({ ...form, first_name: e.target.value })}
             className="border rounded px-3 py-2" />
@@ -338,10 +345,15 @@ export default function Users() {
       </div>
 
       {editId && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center" onClick={() => setEditId(null)}>
+        <div className="fixed inset-0 bg-black/40 overflow-y-auto z-50"
+          onClick={() => { setEditId(null); setFormError(''); }}>
+          <div className="min-h-full flex items-center justify-center p-4">
           <form onSubmit={saveEdit} onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded shadow-lg p-6 w-96">
+            className="bg-white rounded shadow-lg p-6 w-full max-w-md">
             <h2 className="font-bold mb-4">Edit User {editId}</h2>
+            {formError && (
+              <p className="mb-3 text-sm text-red-600 bg-red-50 p-2 rounded">{formError}</p>
+            )}
             <label className="block text-xs text-gray-500 mb-1">First name</label>
             <input required value={editForm.first_name}
               onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })}
@@ -381,10 +393,11 @@ export default function Users() {
               className="w-full border rounded px-3 py-2 mb-4" />
             <div className="flex gap-2">
               <button className="flex-1 bg-blue-600 text-white py-2 rounded">Save</button>
-              <button type="button" onClick={() => setEditId(null)}
+              <button type="button" onClick={() => { setEditId(null); setFormError(''); }}
                 className="flex-1 bg-gray-200 py-2 rounded">Cancel</button>
             </div>
           </form>
+          </div>
         </div>
       )}
     </div>
