@@ -144,7 +144,7 @@ export default function Exams() {
         <h1 className="text-xl font-bold">Exams</h1>
         <button type="button" onClick={toggleForm}
           title={showForm ? 'Close form' : 'New exam'}
-          className="w-8 h-8 rounded-full bg-blue-600 text-white text-xl font-bold leading-none">
+          className="w-8 h-8 rounded-full bg-blue-600 text-white text-xl font-bold leading-none flex items-center justify-center">
           {showForm ? '\u00d7' : '+'}
         </button>
       </div>

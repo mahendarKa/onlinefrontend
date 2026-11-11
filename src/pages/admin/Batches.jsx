@@ -170,7 +170,7 @@ export default function Batches() {
         <h1 className="text-xl font-bold">Batches</h1>
         <button type="button" onClick={toggleForm}
           title={showForm ? 'Close form' : 'New batch'}
-          className="w-8 h-8 rounded-full bg-blue-600 text-white text-xl font-bold leading-none">
+          className="w-8 h-8 rounded-full bg-blue-600 text-white text-xl font-bold leading-none flex items-center justify-center">
           {showForm ? '\u00d7' : '+'}
         </button>
       </div>

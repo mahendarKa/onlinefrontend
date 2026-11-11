@@ -71,7 +71,7 @@ export default function Courses() {
         <h1 className="text-xl font-bold">Courses</h1>
         <button type="button" onClick={toggleForm}
           title={showForm ? 'Close form' : 'New course'}
-          className="w-8 h-8 rounded-full bg-blue-600 text-white text-xl font-bold leading-none">
+          className="w-8 h-8 rounded-full bg-blue-600 text-white text-xl font-bold leading-none flex items-center justify-center">
           {showForm ? '\u00d7' : '+'}
         </button>
       </div>

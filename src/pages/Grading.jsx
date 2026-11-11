@@ -127,8 +127,6 @@ export default function Grading() {
               className="bg-green-600 text-white px-3 py-1.5 rounded">Grade Correct</button>
             <button onClick={() => grade(item, false)}
               className="bg-orange-500 text-white px-3 py-1.5 rounded">Grade Wrong</button>
-            <button onClick={() => grade(item, null)}
-              className="bg-gray-500 text-white px-3 py-1.5 rounded">Grade (no verdict)</button>
           </div>
         </div>
       ))}
