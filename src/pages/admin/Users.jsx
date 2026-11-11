@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api, { fileUrl, detailText } from '../../api/client';
+import Pagination, { usePager } from '../../components/Pagination';
 import { useAuth } from '../../context/AuthContext';
 
 const EMPTY = { first_name: '', last_name: '', email: '', password: '', role: 'student', mobile_number: '', picFile: null };
@@ -44,6 +45,8 @@ export default function Users() {
     return [u.name, u.first_name, u.last_name, u.email, u.mobile_number]
       .some((f) => (f || '').toLowerCase().includes(q));
   });
+
+  const pg = usePager(filtered);
 
   const load = async () => {
     const { data } = await api.get('/users/', {
@@ -336,7 +339,7 @@ export default function Users() {
           </tr>
         </thead>
         <tbody>
-          {filtered.map((u) => (
+          {pg.items.map((u) => (
             <tr key={u.id} className="border-b align-middle">
               <td className="p-3">{u.id}</td>
               <td>
@@ -378,6 +381,7 @@ export default function Users() {
         </tbody>
       </table>
       </div>
+      <Pagination page={pg.page} pages={pg.pages} onChange={pg.setPage} />
 
       {editId && (
         <div className="fixed inset-0 bg-black/40 overflow-y-auto z-50"

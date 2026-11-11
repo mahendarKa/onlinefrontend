@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api, { fileUrl, detailText } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import Pagination, { usePager } from '../components/Pagination';
 
 const TYPES = [
   'multichoice', 'multiselect', 'truefalse', 'shortanswer',
@@ -735,6 +736,8 @@ export default function Questions() {
         q.question_text.toLowerCase().includes(qFilter.toLowerCase()))
   );
 
+  const pg = usePager(filteredQuestions);
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -1403,7 +1406,7 @@ export default function Questions() {
           </tr>
         </thead>
         <tbody>
-          {filteredQuestions.map((q) => (
+          {pg.items.map((q) => (
             <tr key={q.id} className="border-b">
               <td className="p-3">{q.id}</td>
               <td>{q.name}</td>
@@ -1422,6 +1425,7 @@ export default function Questions() {
         </tbody>
       </table>
       </div>
+      <Pagination page={pg.page} pages={pg.pages} onChange={pg.setPage} />
     </div>
   );
 }

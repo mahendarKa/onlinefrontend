@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import api, { detailText } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { apiDate, toApiUtc, toLocalInput } from '../utils/datetime';
+import Pagination, { usePager } from '../components/Pagination';
 
 const nowLocal = () => {
   const d = new Date();
@@ -68,6 +69,10 @@ export default function ExamDetail() {
   };
 
   useEffect(() => { load(); }, [examId]);
+
+  // Hooks must stay above the `if (!exam)` early return.
+  const qPg = usePager(examQuestions);
+  const bPg = usePager(examBatches);
 
   const toggleQ = (id) => {
     const next = new Set(checked);
@@ -292,7 +297,7 @@ export default function ExamDetail() {
           <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <tbody>
-              {examQuestions.map((eq) => {
+              {qPg.items.map((eq) => {
                 const q = questions.find((x) => x.id === eq.question_id);
                 return (
                   <tr key={eq.id} className="border-b">
@@ -315,6 +320,7 @@ export default function ExamDetail() {
             </tbody>
           </table>
           </div>
+          <Pagination page={qPg.page} pages={qPg.pages} onChange={qPg.setPage} />
         </div>
 
         <div className="bg-white rounded shadow p-4 min-w-0">
@@ -377,7 +383,7 @@ export default function ExamDetail() {
           <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <tbody>
-              {examBatches.map((eb) => {
+              {bPg.items.map((eb) => {
                 const b = batches.find((x) => x.id === eb.batch_id);
                 return (
                   <Fragment key={eb.id}>
@@ -444,6 +450,7 @@ export default function ExamDetail() {
             </tbody>
           </table>
           </div>
+          <Pagination page={bPg.page} pages={bPg.pages} onChange={bPg.setPage} />
         </div>
       </div>
     </div>

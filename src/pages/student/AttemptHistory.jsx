@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/client';
 import { apiDate } from '../../utils/datetime';
+import Pagination, { usePager } from '../../components/Pagination';
 
 export default function AttemptHistory() {
   const [history, setHistory] = useState({ attempts: [] });
+
+  const pg = usePager(history.attempts);
 
   useEffect(() => {
     api.get('/attempt-history/my-attempts').then((r) => setHistory(r.data));
@@ -24,7 +27,7 @@ export default function AttemptHistory() {
           </tr>
         </thead>
         <tbody>
-          {history.attempts.map((a) => (
+          {pg.items.map((a) => (
             <tr key={a.attempt_id} className="border-b">
               <td className="p-3">{a.exam_name}</td>
               <td>{a.attempt_number}</td>
@@ -45,6 +48,7 @@ export default function AttemptHistory() {
         </tbody>
       </table>
       </div>
+      <Pagination page={pg.page} pages={pg.pages} onChange={pg.setPage} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import api, { detailText } from '../../api/client';
+import Pagination, { usePager } from '../../components/Pagination';
 
 const EMPTY = { name: '', code: '', description: '' };
 
@@ -45,6 +46,14 @@ export default function Courses() {
     load();
   };
 
+  const filteredCourses = courses.filter((c) =>
+    search === '' ||
+    c.name.toLowerCase().includes(search.toLowerCase()) ||
+    (c.code || '').toLowerCase().includes(search.toLowerCase()) ||
+    (c.description || '').toLowerCase().includes(search.toLowerCase())
+  );
+  const pg = usePager(filteredCourses);
+
   return (
     <div>
       <h1 className="text-xl font-bold mb-4">Courses</h1>
@@ -84,12 +93,7 @@ export default function Courses() {
           </tr>
         </thead>
         <tbody>
-          {courses.filter((c) =>
-            search === '' ||
-            c.name.toLowerCase().includes(search.toLowerCase()) ||
-            (c.code || '').toLowerCase().includes(search.toLowerCase()) ||
-            (c.description || '').toLowerCase().includes(search.toLowerCase())
-          ).map((c) => (
+          {pg.items.map((c) => (
             <tr key={c.id} className="border-b">
               <td className="p-3">{c.id}</td>
               <td>{c.name}</td>
@@ -105,6 +109,7 @@ export default function Courses() {
         </tbody>
       </table>
       </div>
+      <Pagination page={pg.page} pages={pg.pages} onChange={pg.setPage} />
     </div>
   );
 }

@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react';
 import api, { detailText } from '../api/client';
+import Pagination, { usePager } from '../components/Pagination';
 
 export default function Monitoring() {
   const [exams, setExams] = useState([]);
   const [selected, setSelected] = useState(null);
   const [attempts, setAttempts] = useState([]);
+  const [attemptsLoading, setAttemptsLoading] = useState(false);
   const [fbMap, setFbMap] = useState({}); // exam_id -> summary
   const [fbExam, setFbExam] = useState(null); // exam object for modal
   const [feedback, setFeedback] = useState([]);
   const [fbLoading, setFbLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const examsPg = usePager(exams);
+  const attemptsPg = usePager(attempts);
 
   useEffect(() => {
     api.get('/exam-monitoring/exams').then(async (r) => {
@@ -45,8 +50,16 @@ export default function Monitoring() {
 
   const viewAttempts = async (exam) => {
     setSelected(exam);
-    const { data } = await api.get(`/exam-monitoring/exams/${exam.exam_id}/attempts`);
-    setAttempts(data);
+    setAttempts([]);
+    setAttemptsLoading(true);
+    try {
+      const { data } = await api.get(
+        `/exam-monitoring/exams/${exam.exam_id}/attempts`
+      );
+      setAttempts(data);
+    } finally {
+      setAttemptsLoading(false);
+    }
   };
 
   const viewFeedback = async (exam) => {
@@ -80,8 +93,8 @@ export default function Monitoring() {
             </tr>
           </thead>
           <tbody>
-            {exams.map((e) => (
-              <tr key={e.exam_id} className={`border-b ${selected?.exam_id === e.exam_id ? 'bg-blue-50' : ''}`}>
+            {examsPg.items.map((e) => (
+              <tr key={e.exam_id} className="border-b">
                 <td className="p-3">{e.exam_name}</td>
                 <td className="p-3">{e.total_attempts}</td>
                 <td className="p-3">{e.in_progress}</td>
@@ -91,16 +104,28 @@ export default function Monitoring() {
                   <button onClick={() => viewAttempts(e)}
                     className="text-blue-600 hover:underline mr-2">View</button>
                   <button
-                    onClick={() => download(
-                      `/result-export/exams/${e.exam_id}/csv`,
-                      `exam_${e.exam_id}_results.csv`
-                    )}
+                    onClick={() => {
+                      if (window.confirm(
+                        `Download ${e.exam_name} results as CSV?`
+                      )) {
+                        download(
+                          `/result-export/exams/${e.exam_id}/csv`,
+                          `exam_${e.exam_id}_results.csv`
+                        );
+                      }
+                    }}
                     className="text-blue-600 hover:underline mr-2">CSV</button>
                   <button
-                    onClick={() => download(
-                      `/result-pdf/exams/${e.exam_id}/pdf`,
-                      `exam_${e.exam_id}_results.pdf`
-                    )}
+                    onClick={() => {
+                      if (window.confirm(
+                        `Download ${e.exam_name} results as PDF?`
+                      )) {
+                        download(
+                          `/result-pdf/exams/${e.exam_id}/pdf`,
+                          `exam_${e.exam_id}_results.pdf`
+                        );
+                      }
+                    }}
                     className="text-amber-600 hover:underline mr-2">PDF</button>
                   {fbMap[e.exam_id]?.total_feedback > 0 && (
                     <button onClick={() => viewFeedback(e)}
@@ -112,10 +137,18 @@ export default function Monitoring() {
           </tbody>
         </table>
         </div>
+        <Pagination page={examsPg.page} pages={examsPg.pages}
+          onChange={examsPg.setPage} />
 
         {selected && (
-          <div className="bg-white rounded shadow p-4">
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4"
+            onClick={() => setSelected(null)}>
+            <div className="bg-white rounded shadow-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}>
             <h2 className="font-bold mb-3">Attempts — {selected.exam_name}</h2>
+            {attemptsLoading && (
+              <p className="text-sm text-gray-400">Loading...</p>
+            )}
             <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -129,7 +162,7 @@ export default function Monitoring() {
                 </tr>
               </thead>
               <tbody>
-                {attempts.map((a) => (
+                {attemptsPg.items.map((a) => (
                   <tr key={a.attempt_id} className="border-b">
                     <td className="py-1.5 pr-4">{a.student_name}</td>
                     <td className="pr-4">{a.attempt_no}</td>
@@ -139,11 +172,16 @@ export default function Monitoring() {
                     <td>{a.pass_fail ?? '-'}</td>
                   </tr>
                 ))}
-                {attempts.length === 0 && (
+                {attempts.length === 0 && !attemptsLoading && (
                   <tr><td colSpan={6} className="py-3 text-gray-400">No attempts yet</td></tr>
                 )}
               </tbody>
             </table>
+            </div>
+            <Pagination page={attemptsPg.page} pages={attemptsPg.pages}
+              onChange={attemptsPg.setPage} />
+            <button onClick={() => setSelected(null)}
+              className="mt-4 w-full bg-gray-200 py-1.5 rounded text-sm">Close</button>
             </div>
           </div>
         )}

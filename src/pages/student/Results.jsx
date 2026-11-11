@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import api, { fileUrl, detailText } from '../../api/client';
+import Pagination, { usePager } from '../../components/Pagination';
 
 function PieChart({ detail }) {
   // Older detail payloads lack pending/no_verdict — fall back to
@@ -220,6 +221,8 @@ function AnswerReview({ q, index }) {
 
 export default function Results() {
   const [results, setResults] = useState([]);
+
+  const pg = usePager(results);
   const [detail, setDetail] = useState(null);
   const [answers, setAnswers] = useState(null);
   const [loadingFull, setLoadingFull] = useState(false);
@@ -277,7 +280,7 @@ export default function Results() {
           </tr>
         </thead>
         <tbody>
-          {results.map((r) => (
+          {pg.items.map((r) => (
             <tr key={r.attempt_id} className="border-b">
               <td className="p-3">{r.exam_name}</td>
               <td>{r.attempt_no}</td>
@@ -306,6 +309,7 @@ export default function Results() {
         </tbody>
       </table>
       </div>
+      <Pagination page={pg.page} pages={pg.pages} onChange={pg.setPage} />
 
       {detail && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={close}>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import api, { detailText } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { toApiUtc, toLocalInput } from '../utils/datetime';
+import Pagination, { usePager } from '../components/Pagination';
 
 const EMPTY = {
   course_id: '',
@@ -124,6 +125,13 @@ export default function Exams() {
     load();
   };
 
+  const filteredExams = exams.filter((exam) =>
+    (courseFilter === '' || exam.course_id === Number(courseFilter)) &&
+    (nameFilter === '' ||
+      exam.name.toLowerCase().includes(nameFilter.toLowerCase()))
+  );
+  const pg = usePager(filteredExams);
+
   return (
     <div>
       <h1 className="text-xl font-bold mb-4">Exams</h1>
@@ -209,11 +217,7 @@ export default function Exams() {
           </tr>
         </thead>
         <tbody>
-          {exams.filter((exam) =>
-            (courseFilter === '' || exam.course_id === Number(courseFilter)) &&
-            (nameFilter === '' ||
-              exam.name.toLowerCase().includes(nameFilter.toLowerCase()))
-          ).map((exam) => (
+          {pg.items.map((exam) => (
             <tr key={exam.id} className="border-b">
               <td className="p-3">{exam.id}</td>
               <td>
@@ -242,6 +246,7 @@ export default function Exams() {
         </tbody>
       </table>
       </div>
+      <Pagination page={pg.page} pages={pg.pages} onChange={pg.setPage} />
     </div>
   );
 }

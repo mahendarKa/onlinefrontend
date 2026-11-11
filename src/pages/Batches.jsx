@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api, { detailText } from '../api/client';
+import Pagination, { usePager } from '../components/Pagination';
 
 // Read-only view for teachers: their batches and the students
 // enrolled in each one (list is already scoped by the backend).
@@ -53,6 +54,8 @@ export default function Batches() {
     return u ? u.email : '';
   };
 
+  const pg = usePager(batches);
+
   return (
     <div>
       <h1 className="text-xl font-bold mb-4">My Batches</h1>
@@ -68,7 +71,7 @@ export default function Batches() {
               </tr>
             </thead>
             <tbody>
-              {batches.map((b) => (
+              {pg.items.map((b) => (
                 <tr key={b.id} className={`border-b ${selected?.id === b.id ? 'bg-blue-50' : ''}`}>
                   <td className="p-3">{b.id}</td>
                   <td>{b.name}</td>
@@ -84,6 +87,7 @@ export default function Batches() {
               )}
             </tbody>
           </table>
+          <Pagination page={pg.page} pages={pg.pages} onChange={pg.setPage} />
         </div>
 
         {selected && (

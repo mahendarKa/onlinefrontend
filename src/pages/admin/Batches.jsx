@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import api, { detailText } from '../../api/client';
+import Pagination, { usePager } from '../../components/Pagination';
 
 const EMPTY_BATCH = { course_id: '', name: '', start_date: '', end_date: '', description: '' };
 
@@ -150,6 +151,13 @@ export default function Batches() {
     return u ? u.name : `#${id}`;
   };
 
+  const filteredBatches = batches.filter((b) =>
+    (courseFilter === '' || b.course_id === Number(courseFilter)) &&
+    (nameFilter === '' ||
+      b.name.toLowerCase().includes(nameFilter.toLowerCase()))
+  );
+  const pg = usePager(filteredBatches);
+
   return (
     <div>
       <h1 className="text-xl font-bold mb-4">Batches</h1>
@@ -205,11 +213,7 @@ export default function Batches() {
             </tr>
           </thead>
           <tbody>
-            {batches.filter((b) =>
-              (courseFilter === '' || b.course_id === Number(courseFilter)) &&
-              (nameFilter === '' ||
-                b.name.toLowerCase().includes(nameFilter.toLowerCase()))
-            ).map((b) => (
+            {pg.items.map((b) => (
               <tr key={b.id} className={`border-b ${selected?.id === b.id ? 'bg-blue-50' : ''}`}>
                 <td className="p-3">{b.id}</td>
                 <td>{b.name}</td>
@@ -226,6 +230,7 @@ export default function Batches() {
           </tbody>
         </table>
         </div>
+        <Pagination page={pg.page} pages={pg.pages} onChange={pg.setPage} />
         </div>
 
         {selected && (
