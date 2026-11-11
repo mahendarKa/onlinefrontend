@@ -30,6 +30,7 @@ export default function Exams() {
   const [courses, setCourses] = useState([]);
   const [form, setForm] = useState(EMPTY);
   const [editId, setEditId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
   const [nameFilter, setNameFilter] = useState('');
   const [courseFilter, setCourseFilter] = useState('');
   const [error, setError] = useState('');
@@ -84,6 +85,7 @@ export default function Exams() {
       }
       setForm(EMPTY);
       setEditId(null);
+      setShowForm(false);
       load();
     } catch (err) {
       setError(detailText(err, 'Failed to save exam'));
@@ -92,6 +94,7 @@ export default function Exams() {
 
   const startEdit = (exam) => {
     setEditId(exam.id);
+    setShowForm(true);
     setError('');
     setMessage('');
     setForm({
@@ -112,7 +115,10 @@ export default function Exams() {
   const cancelEdit = () => {
     setEditId(null);
     setForm(EMPTY);
+    setShowForm(false);
   };
+
+  const toggleForm = () => (showForm ? cancelEdit() : setShowForm(true));
 
   const toggleActive = async (exam) => {
     await api.put(`/exams/${exam.id}`, { is_active: !exam.is_active });
@@ -134,8 +140,16 @@ export default function Exams() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-4">Exams</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-bold">Exams</h1>
+        <button type="button" onClick={toggleForm}
+          title={showForm ? 'Close form' : 'New exam'}
+          className="w-8 h-8 rounded-full bg-blue-600 text-white text-xl font-bold leading-none">
+          {showForm ? '\u00d7' : '+'}
+        </button>
+      </div>
 
+      {showForm && (
       <form onSubmit={submit} className="bg-white p-4 rounded shadow mb-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
           <select required value={form.course_id}
@@ -194,6 +208,7 @@ export default function Exams() {
         {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
         {message && <p className="mt-2 text-sm text-green-600">{message}</p>}
       </form>
+      )}
 
       <div className="flex flex-wrap gap-2 mb-3">
         <input placeholder="Search exam name..." value={nameFilter}

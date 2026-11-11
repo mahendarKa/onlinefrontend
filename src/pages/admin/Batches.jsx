@@ -11,6 +11,7 @@ export default function Batches() {
   const [teachers, setTeachers] = useState([]);
   const [batchForm, setBatchForm] = useState(EMPTY_BATCH);
   const [editId, setEditId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
   const [nameFilter, setNameFilter] = useState('');
   const [courseFilter, setCourseFilter] = useState('');
   const [selected, setSelected] = useState(null);
@@ -68,6 +69,7 @@ export default function Batches() {
       }
       setBatchForm(EMPTY_BATCH);
       setEditId(null);
+      setShowForm(false);
       load();
     } catch (err) {
       setError(detailText(err, 'Failed to save batch'));
@@ -76,6 +78,7 @@ export default function Batches() {
 
   const startEdit = (b) => {
     setEditId(b.id);
+    setShowForm(true);
     setError('');
     setMessage('');
     setBatchForm({
@@ -91,7 +94,10 @@ export default function Batches() {
   const cancelEdit = () => {
     setEditId(null);
     setBatchForm(EMPTY_BATCH);
+    setShowForm(false);
   };
+
+  const toggleForm = () => (showForm ? cancelEdit() : setShowForm(true));
 
   const toggle = (setFn, set, id) => {
     const next = new Set(set);
@@ -160,8 +166,16 @@ export default function Batches() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-4">Batches</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-bold">Batches</h1>
+        <button type="button" onClick={toggleForm}
+          title={showForm ? 'Close form' : 'New batch'}
+          className="w-8 h-8 rounded-full bg-blue-600 text-white text-xl font-bold leading-none">
+          {showForm ? '\u00d7' : '+'}
+        </button>
+      </div>
 
+      {showForm && (
       <form onSubmit={createBatch} className="bg-white p-4 rounded shadow mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <select required value={batchForm.course_id}
           onChange={(e) => setBatchForm({ ...batchForm, course_id: e.target.value })}
@@ -188,11 +202,12 @@ export default function Batches() {
           )}
         </div>
       </form>
+      )}
 
       {error && <p className="mb-3 text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>}
       {message && <p className="mb-3 text-sm text-green-600 bg-green-50 p-2 rounded">{message}</p>}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className={`grid grid-cols-1 gap-4 ${selected ? 'lg:grid-cols-2' : 'lg:max-w-4xl lg:mx-auto'}`}>
         <div className="self-start">
         <div className="flex flex-wrap gap-2 mb-2">
           <input placeholder="Search batch name..." value={nameFilter}

@@ -60,6 +60,7 @@ export default function Questions() {
   });
   const [editImages, setEditImages] = useState([]);
   const [editId, setEditId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
   const [qFilter, setQFilter] = useState('');
   const [catFilter, setCatFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -199,7 +200,10 @@ export default function Questions() {
     setEditId(null);
     setForm(EMPTY_Q);
     resetTypeStates();
+    setShowForm(false);
   };
+
+  const toggleForm = () => (showForm ? cancelEdit() : setShowForm(true));
 
   // GET that resolves to null on failure (missing config is normal).
   const tryGet = (path) =>
@@ -207,6 +211,7 @@ export default function Questions() {
 
   const startEdit = async (q) => {
     setEditId(q.id);
+    setShowForm(true);
     setError('');
     setMessage('');
     setForm({
@@ -742,12 +747,19 @@ export default function Questions() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold">Question Bank</h1>
-        <button
-          onClick={() => { setShowBulk(!showBulk); setBulkResult(null); }}
-          className="bg-emerald-600 text-white px-4 py-1.5 rounded text-sm"
-        >
-          {showBulk ? 'Close Bulk Upload' : 'Bulk Upload'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={toggleForm}
+            title={showForm ? 'Close form' : 'New question'}
+            className="w-8 h-8 rounded-full bg-blue-600 text-white text-xl font-bold leading-none">
+            {showForm ? '\u00d7' : '+'}
+          </button>
+          <button
+            onClick={() => { setShowBulk(!showBulk); setBulkResult(null); }}
+            className="bg-emerald-600 text-white px-4 py-1.5 rounded text-sm"
+          >
+            {showBulk ? 'Close Bulk Upload' : 'Bulk Upload'}
+          </button>
+        </div>
       </div>
 
       {showBulk && (
@@ -820,6 +832,7 @@ export default function Questions() {
         </div>
       )}
 
+      {showForm && (
       <div className="bg-white p-4 rounded shadow mb-4">
         <div className="flex gap-2 mb-3 items-end">
           <div>
@@ -1379,6 +1392,7 @@ export default function Questions() {
           {message && <p className="mt-2 text-sm text-green-600">{message}</p>}
         </form>
       </div>
+      )}
 
       <div className="flex flex-wrap gap-2 mb-3">
         <input placeholder="Search name or text..." value={qFilter}

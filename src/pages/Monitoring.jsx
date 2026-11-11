@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api, { detailText } from '../api/client';
 import Pagination, { usePager } from '../components/Pagination';
+import ResultDetailModal from '../components/ResultDetailModal';
 
 export default function Monitoring() {
   const [exams, setExams] = useState([]);
@@ -12,6 +13,10 @@ export default function Monitoring() {
   const [feedback, setFeedback] = useState([]);
   const [fbLoading, setFbLoading] = useState(false);
   const [error, setError] = useState('');
+  const [detail, setDetail] = useState(null);   // attempt summary payload
+  const [detailInfo, setDetailInfo] = useState(null); // {student_name, attempt_no}
+  const [answers, setAnswers] = useState(null);
+  const [loadingFull, setLoadingFull] = useState(false);
 
   const examsPg = usePager(exams);
   const attemptsPg = usePager(attempts);
@@ -51,6 +56,8 @@ export default function Monitoring() {
   const viewAttempts = async (exam) => {
     setSelected(exam);
     setAttempts([]);
+    setDetail(null);
+    setAnswers(null);
     setAttemptsLoading(true);
     try {
       const { data } = await api.get(
@@ -60,6 +67,39 @@ export default function Monitoring() {
     } finally {
       setAttemptsLoading(false);
     }
+  };
+
+  const viewAttemptDetail = async (a) => {
+    setError('');
+    try {
+      const { data } = await api.get(`/results/attempts/${a.attempt_id}/detail`);
+      setAnswers(null);
+      setDetailInfo({ student_name: a.student_name, attempt_no: a.attempt_no });
+      setDetail(data);
+    } catch (err) {
+      setError(detailText(err, 'Could not load attempt details'));
+    }
+  };
+
+  const viewAttemptFull = async () => {
+    setLoadingFull(true);
+    setError('');
+    try {
+      const { data } = await api.get(
+        `/results/attempts/${detail.attempt_id}/review`
+      );
+      setAnswers(data);
+    } catch (err) {
+      setError(detailText(err, 'Could not load answer details'));
+    } finally {
+      setLoadingFull(false);
+    }
+  };
+
+  const closeDetail = () => {
+    setDetail(null);
+    setDetailInfo(null);
+    setAnswers(null);
   };
 
   const viewFeedback = async (exam) => {
@@ -94,13 +134,14 @@ export default function Monitoring() {
           </thead>
           <tbody>
             {examsPg.items.map((e) => (
-              <tr key={e.exam_id} className="border-b">
+              <tr key={e.exam_id} onClick={() => viewAttempts(e)}
+                className="border-b cursor-pointer hover:bg-gray-50">
                 <td className="p-3">{e.exam_name}</td>
                 <td className="p-3">{e.total_attempts}</td>
                 <td className="p-3">{e.in_progress}</td>
                 <td className="p-3">{e.submitted}</td>
                 <td className="p-3">{e.evaluated}</td>
-                <td className="p-3 whitespace-nowrap">
+                <td className="p-3 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                   <button onClick={() => viewAttempts(e)}
                     className="text-blue-600 hover:underline mr-2">View</button>
                   <button
@@ -159,21 +200,27 @@ export default function Monitoring() {
                   <th className="py-1 pr-4">Marks</th>
                   <th className="py-1 pr-4">%</th>
                   <th className="py-1 pr-4">Result</th>
+                  <th className="py-1 pr-4"></th>
                 </tr>
               </thead>
               <tbody>
                 {attemptsPg.items.map((a) => (
-                  <tr key={a.attempt_id} className="border-b">
+                  <tr key={a.attempt_id} onClick={() => viewAttemptDetail(a)}
+                    className="border-b cursor-pointer hover:bg-gray-50">
                     <td className="py-1.5 pr-4">{a.student_name}</td>
                     <td className="pr-4">{a.attempt_no}</td>
                     <td className="pr-4 capitalize">{a.status}</td>
                     <td className="pr-4">{a.marks_obtained ?? '-'}</td>
                     <td className="pr-4">{a.percentage ?? '-'}</td>
-                    <td>{a.pass_fail ?? '-'}</td>
+                    <td className="pr-4">{a.pass_fail ?? '-'}</td>
+                    <td>
+                      <button onClick={(e) => { e.stopPropagation(); viewAttemptDetail(a); }}
+                        className="text-blue-600 hover:underline">View</button>
+                    </td>
                   </tr>
                 ))}
                 {attempts.length === 0 && !attemptsLoading && (
-                  <tr><td colSpan={6} className="py-3 text-gray-400">No attempts yet</td></tr>
+                  <tr><td colSpan={7} className="py-3 text-gray-400">No attempts yet</td></tr>
                 )}
               </tbody>
             </table>
@@ -184,6 +231,19 @@ export default function Monitoring() {
               className="mt-4 w-full bg-gray-200 py-1.5 rounded text-sm">Close</button>
             </div>
           </div>
+        )}
+
+        {detail && (
+          <ResultDetailModal
+            title={detailInfo
+              ? `Attempt ${detailInfo.attempt_no} — ${detailInfo.student_name}`
+              : `Attempt ${detail.attempt_id} detail`}
+            detail={detail}
+            answers={answers}
+            loadingFull={loadingFull}
+            onViewFull={viewAttemptFull}
+            onClose={closeDetail}
+          />
         )}
       </div>
       {fbExam && (

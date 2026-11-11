@@ -8,6 +8,7 @@ export default function Courses() {
   const [courses, setCourses] = useState([]);
   const [form, setForm] = useState(EMPTY);
   const [editId, setEditId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
 
@@ -29,6 +30,7 @@ export default function Courses() {
       }
       setForm(EMPTY);
       setEditId(null);
+      setShowForm(false);
       load();
     } catch (err) {
       setError(detailText(err, 'Save failed'));
@@ -38,7 +40,16 @@ export default function Courses() {
   const edit = (c) => {
     setForm({ name: c.name, code: c.code, description: c.description || '' });
     setEditId(c.id);
+    setShowForm(true);
   };
+
+  const cancelEdit = () => {
+    setEditId(null);
+    setForm(EMPTY);
+    setShowForm(false);
+  };
+
+  const toggleForm = () => (showForm ? cancelEdit() : setShowForm(true));
 
   const remove = async (id) => {
     if (!window.confirm('Delete this course?')) return;
@@ -56,8 +67,16 @@ export default function Courses() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-4">Courses</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-bold">Courses</h1>
+        <button type="button" onClick={toggleForm}
+          title={showForm ? 'Close form' : 'New course'}
+          className="w-8 h-8 rounded-full bg-blue-600 text-white text-xl font-bold leading-none">
+          {showForm ? '\u00d7' : '+'}
+        </button>
+      </div>
 
+      {showForm && (
       <form onSubmit={submit} className="bg-white p-4 rounded shadow mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <input required placeholder="Course name" value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -73,12 +92,13 @@ export default function Courses() {
             {editId ? 'Update' : 'Create'}
           </button>
           {editId && (
-            <button type="button" onClick={() => { setEditId(null); setForm(EMPTY); }}
+            <button type="button" onClick={cancelEdit}
               className="px-3 border rounded">X</button>
           )}
         </div>
         {error && <p className="col-span-4 text-sm text-red-600">{error}</p>}
       </form>
+      )}
 
       <input placeholder="Search name, code or description..." value={search}
         onChange={(e) => setSearch(e.target.value)}

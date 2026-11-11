@@ -62,7 +62,7 @@ export default function Batches() {
 
       {error && <p className="mb-3 text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className={`grid grid-cols-1 gap-4 ${selected ? 'lg:grid-cols-2' : 'lg:max-w-4xl lg:mx-auto'}`}>
         <div className="self-start overflow-x-auto">
           <table className="bg-white rounded shadow text-sm w-full">
             <thead>
