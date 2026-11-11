@@ -169,7 +169,7 @@ export default function Monitoring() {
                     {'\u2605'.repeat(5 - f.rating)}
                   </span>
                   <span className="text-gray-400 ml-2 text-xs">
-                    Student #{f.student_id}
+                    {f.student_name || `#${f.student_id}`}
                   </span>
                 </p>
                 {f.comments
