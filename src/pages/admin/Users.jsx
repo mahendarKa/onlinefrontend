@@ -17,6 +17,8 @@ export default function Users() {
   const { user: me } = useAuth();
   const [users, setUsers] = useState([]);
   const [roleFilter, setRoleFilter] = useState('');
+  const [search, setSearch] = useState('');
+  const [activeFilter, setActiveFilter] = useState('');
   const [form, setForm] = useState(EMPTY);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -32,6 +34,16 @@ export default function Users() {
   const [uploadPct, setUploadPct] = useState(null);
 
   const isSuper = me?.role === 'superadmin';
+
+  // Client-side narrowing on top of the server-side role filter.
+  const q = search.trim().toLowerCase();
+  const filtered = users.filter((u) => {
+    if (activeFilter === 'active' && !u.is_active) return false;
+    if (activeFilter === 'inactive' && u.is_active) return false;
+    if (!q) return true;
+    return [u.name, u.first_name, u.last_name, u.email, u.mobile_number]
+      .some((f) => (f || '').toLowerCase().includes(q));
+  });
 
   const load = async () => {
     const { data } = await api.get('/users/', {
@@ -179,6 +191,22 @@ export default function Users() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold">Users</h1>
         <div className="flex gap-3">
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search name / email / mobile"
+            className="border rounded px-3 py-1.5 text-sm w-56"
+          />
+          <select
+            value={activeFilter}
+            onChange={(e) => setActiveFilter(e.target.value)}
+            className="border rounded px-3 py-1.5 text-sm"
+          >
+            <option value="">All status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
@@ -308,8 +336,8 @@ export default function Users() {
           </tr>
         </thead>
         <tbody>
-          {users.map((u) => (
-            <tr key={u.id} className="border-b align-top">
+          {filtered.map((u) => (
+            <tr key={u.id} className="border-b align-middle">
               <td className="p-3">{u.id}</td>
               <td>
                 <span className="flex items-center gap-2">
@@ -340,6 +368,13 @@ export default function Users() {
               </td>
             </tr>
           ))}
+          {filtered.length === 0 && (
+            <tr>
+              <td colSpan={7} className="p-6 text-center text-gray-400">
+                No users match the current search/filters.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
       </div>

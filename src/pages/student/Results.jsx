@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
-import api, { fileUrl } from '../../api/client';
+import api, { fileUrl, detailText } from '../../api/client';
 
 function PieChart({ detail }) {
   // Older detail payloads lack pending/no_verdict — fall back to
@@ -223,24 +223,33 @@ export default function Results() {
   const [detail, setDetail] = useState(null);
   const [answers, setAnswers] = useState(null);
   const [loadingFull, setLoadingFull] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     api.get('/results/my-results').then((r) => setResults(r.data));
   }, []);
 
   const view = async (attemptId) => {
-    const { data } = await api.get(`/results/my-results/${attemptId}`);
-    setAnswers(null);
-    setDetail(data);
+    setError('');
+    try {
+      const { data } = await api.get(`/results/my-results/${attemptId}`);
+      setAnswers(null);
+      setDetail(data);
+    } catch (err) {
+      setError(detailText(err, 'Could not load result details'));
+    }
   };
 
   const viewFull = async () => {
     setLoadingFull(true);
+    setError('');
     try {
       const { data } = await api.get(
         `/results/my-results/${detail.attempt_id}/answers`
       );
       setAnswers(data);
+    } catch (err) {
+      setError(detailText(err, 'Could not load answer details'));
     } finally {
       setLoadingFull(false);
     }
@@ -254,6 +263,10 @@ export default function Results() {
   return (
     <div>
       <h1 className="text-xl font-bold mb-4">My Results</h1>
+
+      {error && (
+        <p className="mb-3 text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>
+      )}
 
       <div className="overflow-x-auto">
       <table className="w-full bg-white rounded shadow text-sm">
