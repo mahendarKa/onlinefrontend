@@ -5,8 +5,17 @@ import ResultDetailModal from '../../components/ResultDetailModal';
 
 export default function Results() {
   const [results, setResults] = useState([]);
+  const [search, setSearch] = useState('');
+  const [resultFilter, setResultFilter] = useState('');
 
-  const pg = usePager(results);
+  const q = search.trim().toLowerCase();
+  const filteredResults = results.filter((r) =>
+    (resultFilter === '' ||
+      (r.pass_fail === 'PASS' ? 'pass'
+        : r.pass_fail === 'FAIL' ? 'fail' : 'pending') === resultFilter) &&
+    (q === '' || r.exam_name.toLowerCase().includes(q))
+  );
+  const pg = usePager(filteredResults);
   const [detail, setDetail] = useState(null);
   const [answers, setAnswers] = useState(null);
   const [loadingFull, setLoadingFull] = useState(false);
@@ -55,6 +64,19 @@ export default function Results() {
         <p className="mb-3 text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>
       )}
 
+      <div className="flex flex-wrap gap-2 mb-3">
+        <input placeholder="Search exam name..." value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border rounded px-3 py-1.5 text-sm flex-1 min-w-48" />
+        <select value={resultFilter} onChange={(e) => setResultFilter(e.target.value)}
+          className="border rounded px-3 py-1.5 text-sm">
+          <option value="">All results</option>
+          <option value="pass">Pass</option>
+          <option value="fail">Fail</option>
+          <option value="pending">Pending</option>
+        </select>
+      </div>
+
       <div className="overflow-x-auto">
       <table className="w-full bg-white rounded shadow text-sm">
         <thead>
@@ -90,6 +112,9 @@ export default function Results() {
           ))}
           {results.length === 0 && (
             <tr><td colSpan={8} className="p-4 text-gray-400">No results yet</td></tr>
+          )}
+          {results.length > 0 && filteredResults.length === 0 && (
+            <tr><td colSpan={8} className="p-4 text-gray-400">No matching results</td></tr>
           )}
         </tbody>
       </table>

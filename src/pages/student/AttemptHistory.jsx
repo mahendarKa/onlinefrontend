@@ -5,8 +5,20 @@ import Pagination, { usePager } from '../../components/Pagination';
 
 export default function AttemptHistory() {
   const [history, setHistory] = useState({ attempts: [] });
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [resultFilter, setResultFilter] = useState('');
 
-  const pg = usePager(history.attempts);
+  const statuses = [...new Set(history.attempts.map((a) => a.status))].sort();
+  const q = search.trim().toLowerCase();
+  const filtered = history.attempts.filter((a) =>
+    (statusFilter === '' || a.status === statusFilter) &&
+    (resultFilter === '' ||
+      (a.pass_fail === 'PASS' ? 'pass'
+        : a.pass_fail === 'FAIL' ? 'fail' : 'pending') === resultFilter) &&
+    (q === '' || a.exam_name.toLowerCase().includes(q))
+  );
+  const pg = usePager(filtered);
 
   useEffect(() => {
     api.get('/attempt-history/my-attempts').then((r) => setHistory(r.data));
@@ -17,6 +29,26 @@ export default function AttemptHistory() {
       <h1 className="text-xl font-bold mb-4">
         Attempt History ({history.total_attempts || 0})
       </h1>
+
+      <div className="flex flex-wrap gap-2 mb-3">
+        <input placeholder="Search exam name..." value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border rounded px-3 py-1.5 text-sm flex-1 min-w-48" />
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+          className="border rounded px-3 py-1.5 text-sm capitalize">
+          <option value="">All statuses</option>
+          {statuses.map((s) => (
+            <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
+          ))}
+        </select>
+        <select value={resultFilter} onChange={(e) => setResultFilter(e.target.value)}
+          className="border rounded px-3 py-1.5 text-sm">
+          <option value="">All results</option>
+          <option value="pass">Pass</option>
+          <option value="fail">Fail</option>
+          <option value="pending">Pending</option>
+        </select>
+      </div>
 
       <div className="overflow-x-auto">
       <table className="w-full bg-white rounded shadow text-sm">
@@ -44,6 +76,9 @@ export default function AttemptHistory() {
           ))}
           {history.attempts.length === 0 && (
             <tr><td colSpan={7} className="p-4 text-gray-400">No attempts yet</td></tr>
+          )}
+          {history.attempts.length > 0 && filtered.length === 0 && (
+            <tr><td colSpan={7} className="p-4 text-gray-400">No matching attempts</td></tr>
           )}
         </tbody>
       </table>

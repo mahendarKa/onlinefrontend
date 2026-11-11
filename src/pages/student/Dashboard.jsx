@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { detailText } from '../../api/client';
 import { apiDate } from '../../utils/datetime';
+import Pagination, { usePager } from '../../components/Pagination';
 
 const STATUS_STYLE = {
   available: 'bg-green-100 text-green-700',
@@ -13,6 +14,8 @@ const STATUS_STYLE = {
 
 export default function Dashboard() {
   const [exams, setExams] = useState([]);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -40,20 +43,47 @@ export default function Dashboard() {
     }
   };
 
+  const q = search.trim().toLowerCase();
+  const filtered = exams.filter((e) =>
+    (statusFilter === '' || e.status === statusFilter) &&
+    (q === '' ||
+      e.name.toLowerCase().includes(q) ||
+      (e.description || '').toLowerCase().includes(q))
+  );
+  const pg = usePager(filtered);
+
   return (
     <div>
       <h1 className="text-xl font-bold mb-4">My Exams</h1>
 
       {error && <p className="mb-3 text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>}
 
+      <div className="flex flex-wrap gap-2 mb-3">
+        <input placeholder="Search exam name or description..." value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border rounded px-3 py-1.5 text-sm flex-1 min-w-48" />
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+          className="border rounded px-3 py-1.5 text-sm capitalize">
+          <option value="">All statuses</option>
+          {Object.keys(STATUS_STYLE).map((s) => (
+            <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
+          ))}
+        </select>
+      </div>
+
       {exams.length === 0 && (
         <p className="text-gray-500 bg-white p-4 rounded shadow">
           No exams assigned to your batches yet.
         </p>
       )}
+      {exams.length > 0 && filtered.length === 0 && (
+        <p className="text-gray-500 bg-white p-4 rounded shadow">
+          No exams match your search/filters.
+        </p>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {exams.map((exam) => (
+        {pg.items.map((exam) => (
           <div key={exam.exam_id} className="bg-white rounded shadow p-4">
             <div className="flex justify-between items-start mb-2">
               <h2 className="font-semibold">{exam.name}</h2>
@@ -79,6 +109,7 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+      <Pagination page={pg.page} pages={pg.pages} onChange={pg.setPage} />
     </div>
   );
 }

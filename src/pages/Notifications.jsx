@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import { apiDate } from '../utils/datetime';
+import { useAuth } from '../context/AuthContext';
+import Pagination, { usePager } from '../components/Pagination';
 
 const TYPE_STYLES = {
   'exam.assigned': 'bg-blue-100 text-blue-700',
@@ -20,9 +23,43 @@ function fmt(dt) {
 const refreshBell = () =>
   window.dispatchEvent(new Event('notifications:refresh'));
 
+// Fallback destinations for notifications stored before the `link`
+// column existed — resolved by the viewer's role.
+const STUDENT_LINKS = {
+  'exam.assigned': '/dashboard',
+  'exam.expired': '/attempts',
+  'result.published': '/results',
+  'batch.enrolled': '/dashboard',
+};
+const STAFF_LINKS = {
+  'exam.assigned': '/exams',
+  'exam.batch_assigned': '/exams',
+  'exam.lifecycle': '/exams',
+  'exam.grader_assigned': '/grading',
+  'exam.expired': '/monitoring',
+  'batch.assigned': '/batches',
+};
+
 export default function Notifications() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const pg = usePager(items);
+
+  const linkFor = (n) =>
+    n.link ||
+    (user?.role === 'student' ? STUDENT_LINKS : STAFF_LINKS)[
+      n.notification_type
+    ] ||
+    null;
+
+  const open = (n) => {
+    if (!n.is_read) markRead(n.id);
+    const target = linkFor(n);
+    if (target) navigate(target);
+  };
 
   const load = () =>
     api.get('/notifications/my').then(({ data }) => {
@@ -73,9 +110,10 @@ export default function Notifications() {
       )}
 
       <div className="space-y-2">
-        {items.map((n) => (
-          <div key={n.id} onClick={() => markRead(n.id)}
-            className={`bg-white rounded shadow p-4 flex gap-3 ${
+        {pg.items.map((n) => (
+          <div key={n.id} onClick={() => open(n)}
+            title={linkFor(n) ? 'Open related page' : 'Mark as read'}
+            className={`bg-white rounded shadow p-4 flex gap-3 cursor-pointer hover:shadow-md ${
               n.is_read ? 'opacity-70' : 'border-l-4 border-blue-500'
             }`}>
             <div className="flex-1">
@@ -91,9 +129,12 @@ export default function Notifications() {
                 {n.message}
               </p>
               <p className="text-xs text-gray-400 mt-1">{fmt(n.created_at)}</p>
+              {linkFor(n) && (
+                <p className="text-xs text-blue-600 mt-1">Open &rarr;</p>
+              )}
             </div>
             {!n.is_read && (
-              <button onClick={() => markRead(n.id)}
+              <button onClick={(e) => { e.stopPropagation(); markRead(n.id); }}
                 className="text-xs text-blue-600 hover:underline self-start whitespace-nowrap">
                 Mark read
               </button>
@@ -101,6 +142,7 @@ export default function Notifications() {
           </div>
         ))}
       </div>
+      <Pagination page={pg.page} pages={pg.pages} onChange={pg.setPage} />
     </div>
   );
 }

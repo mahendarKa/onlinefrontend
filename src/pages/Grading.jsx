@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api, { detailText } from '../api/client';
+import Pagination, { usePager } from '../components/Pagination';
 
 export default function Grading() {
   const [pending, setPending] = useState([]);
@@ -36,6 +37,8 @@ export default function Grading() {
             item.answer_text, item.code_text, examName(item.exam_id)]
       .some((f) => (f || '').toLowerCase().includes(q));
   });
+
+  const pg = usePager(filtered);
 
   const grade = async (item, isCorrect) => {
     setError('');
@@ -84,7 +87,7 @@ export default function Grading() {
         <p className="text-gray-500 bg-white p-4 rounded shadow">No items match the current search/filters.</p>
       )}
 
-      {filtered.map((item) => (
+      {pg.items.map((item) => (
         <div key={item.answer_id} className="bg-white rounded shadow p-4 mb-3 text-sm">
           <div className="flex justify-between mb-2">
             <span className="font-medium">
@@ -129,6 +132,7 @@ export default function Grading() {
           </div>
         </div>
       ))}
+      <Pagination page={pg.page} pages={pg.pages} onChange={pg.setPage} />
     </div>
   );
 }
