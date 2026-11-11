@@ -5,6 +5,8 @@ export default function Grading() {
   const [pending, setPending] = useState([]);
   const [exams, setExams] = useState([]);
   const [examFilter, setExamFilter] = useState('');
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
   const [marks, setMarks] = useState({});
   const [error, setError] = useState('');
 
@@ -20,6 +22,20 @@ export default function Grading() {
   };
 
   useEffect(() => { load(); }, [examFilter]);
+
+  const examName = (id) =>
+    exams.find((e) => e.id === id)?.name || `Exam ${id}`;
+
+  const types = [...new Set(pending.map((i) => i.question_type))].sort();
+
+  const q = search.trim().toLowerCase();
+  const filtered = pending.filter((item) => {
+    if (typeFilter && item.question_type !== typeFilter) return false;
+    if (!q) return true;
+    return [item.student_name, item.question_text, item.question_type,
+            item.answer_text, item.code_text, examName(item.exam_id)]
+      .some((f) => (f || '').toLowerCase().includes(q));
+  });
 
   const grade = async (item, isCorrect) => {
     setError('');
@@ -40,11 +56,22 @@ export default function Grading() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold">Pending Manual Evaluation</h1>
-        <select value={examFilter} onChange={(e) => setExamFilter(e.target.value)}
-          className="border rounded px-3 py-1.5 text-sm">
-          <option value="">All exams</option>
-          {exams.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
-        </select>
+        <div className="flex gap-3">
+          <input type="search" value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search student / question"
+            className="border rounded px-3 py-1.5 text-sm w-56" />
+          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}
+            className="border rounded px-3 py-1.5 text-sm">
+            <option value="">All types</option>
+            {types.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <select value={examFilter} onChange={(e) => setExamFilter(e.target.value)}
+            className="border rounded px-3 py-1.5 text-sm">
+            <option value="">All exams</option>
+            {exams.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
+          </select>
+        </div>
       </div>
 
       {error && <p className="mb-3 text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>}
@@ -53,11 +80,15 @@ export default function Grading() {
         <p className="text-gray-500 bg-white p-4 rounded shadow">Nothing pending evaluation.</p>
       )}
 
-      {pending.map((item) => (
+      {pending.length > 0 && filtered.length === 0 && (
+        <p className="text-gray-500 bg-white p-4 rounded shadow">No items match the current search/filters.</p>
+      )}
+
+      {filtered.map((item) => (
         <div key={item.answer_id} className="bg-white rounded shadow p-4 mb-3 text-sm">
           <div className="flex justify-between mb-2">
             <span className="font-medium">
-              {item.student_name} — {item.question_type}
+              {item.student_name} — {examName(item.exam_id)} · {item.question_type}
             </span>
             <span className="text-gray-500">max {item.maximum_marks} marks</span>
           </div>
