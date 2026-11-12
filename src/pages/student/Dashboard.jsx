@@ -107,11 +107,11 @@ export default function Dashboard() {
               {exam.start_time && <p>Opens: {apiDate(exam.start_time).toLocaleString()}</p>}
               {exam.end_time && <p>Closes: {apiDate(exam.end_time).toLocaleString()}</p>}
             </div>
-            {exam.status === 'pending_approval' && (
+            {/* {exam.status === 'pending_approval' && (
               <p className="text-xs text-purple-700 bg-purple-50 rounded px-2 py-1.5">
                 This exam is under pending status. Please wait for admin approval.
               </p>
-            )}
+            )} */}
             {(exam.status === 'available' || exam.status === 'in_progress') && (
               <button
                 onClick={() => startExam(exam)}
