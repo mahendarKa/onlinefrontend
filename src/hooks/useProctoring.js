@@ -56,6 +56,12 @@ export default function useProctoring({ attemptId, enabled }) {
   const videoRef = useRef(null);
   const [status, setStatus] = useState('idle'); // idle|starting|active|no_camera
   const [aiActive, setAiActive] = useState(false);
+  // Bumped by retry() to re-run the camera request after a denial.
+  const [camAttempt, setCamAttempt] = useState(0);
+  const retry = () => {
+    setStatus('starting');
+    setCamAttempt((c) => c + 1);
+  };
 
   useEffect(() => {
     if (!enabled || !attemptId) return undefined;
@@ -180,6 +186,16 @@ export default function useProctoring({ attemptId, enabled }) {
         stream.getTracks().forEach((t) => t.stop());
         return;
       }
+      // If the webcam is unplugged/revoked mid-exam the track ends —
+      // drop back to the camera-required gate and flag it.
+      stream.getVideoTracks().forEach((t) => {
+        t.addEventListener('ended', () => {
+          if (!cancelled) {
+            setStatus('no_camera');
+            post('camera_lost', 'Webcam stream ended during the exam');
+          }
+        });
+      });
       const video = videoRef.current;
       if (video) {
         video.srcObject = stream;
@@ -210,7 +226,7 @@ export default function useProctoring({ attemptId, enabled }) {
       document.removeEventListener('fullscreenchange', onFullscreen);
       if (stream) stream.getTracks().forEach((t) => t.stop());
     };
-  }, [attemptId, enabled]);
+  }, [attemptId, enabled, camAttempt]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { videoRef, status, aiActive };
+  return { videoRef, status, aiActive, retry };
 }

@@ -20,6 +20,9 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [disclaimerExam, setDisclaimerExam] = useState(null);
+  const [camChecking, setCamChecking] = useState(false);
+  const [camError, setCamError] = useState('');
   const navigate = useNavigate();
 
   const load = async () => {
@@ -32,6 +35,40 @@ export default function Dashboard() {
       .catch(() => setError('Failed to load exams'))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleStart = (exam) => {
+    // Proctored exams get a disclaimer + camera check first.
+    if (exam.is_proctored) {
+      setCamError('');
+      setDisclaimerExam(exam);
+    } else {
+      startExam(exam);
+    }
+  };
+
+  // Camera access must be granted BEFORE the attempt is created so a
+  // denied camera never consumes an attempt.
+  const agreeAndStart = async () => {
+    const exam = disclaimerExam;
+    setCamChecking(true);
+    setCamError('');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+      });
+      stream.getTracks().forEach((t) => t.stop());
+    } catch {
+      setCamError(
+        'Camera access is required for this exam. Allow camera ' +
+        'permission in your browser and try again.'
+      );
+      setCamChecking(false);
+      return;
+    }
+    setCamChecking(false);
+    setDisclaimerExam(null);
+    startExam(exam);
+  };
 
   const startExam = async (exam) => {
     setError('');
@@ -96,8 +133,16 @@ export default function Dashboard() {
           <div key={exam.exam_id} className="bg-white rounded shadow p-4">
             <div className="flex justify-between items-start mb-2">
               <h2 className="font-semibold">{exam.name}</h2>
-              <span className={`text-xs px-2 py-0.5 rounded ${STATUS_STYLE[exam.status] || ''}`}>
-                {exam.status.replace('_', ' ')}
+              <span className="flex gap-1">
+                {exam.is_proctored && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700"
+                    title="Webcam + activity monitoring">
+                    Proctored
+                  </span>
+                )}
+                <span className={`text-xs px-2 py-0.5 rounded ${STATUS_STYLE[exam.status] || ''}`}>
+                  {exam.status.replace('_', ' ')}
+                </span>
               </span>
             </div>
             <p className="text-sm text-gray-500 mb-3">{exam.description || 'No description'}</p>
@@ -114,7 +159,7 @@ export default function Dashboard() {
             )} */}
             {(exam.status === 'available' || exam.status === 'in_progress') && (
               <button
-                onClick={() => startExam(exam)}
+                onClick={() => handleStart(exam)}
                 className="w-full bg-blue-600 text-white py-1.5 rounded text-sm hover:bg-blue-700"
               >
                 {exam.status === 'in_progress' ? 'Resume Attempt' : 'Start Exam'}
@@ -124,6 +169,55 @@ export default function Dashboard() {
         ))}
       </div>
       <Pagination page={pg.page} pages={pg.pages} onChange={pg.setPage} />
+
+      {disclaimerExam && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+          onClick={() => !camChecking && setDisclaimerExam(null)}>
+          <div className="bg-white rounded shadow-lg p-6 w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}>
+            <h2 className="font-bold text-lg mb-1">
+              Proctored exam — {disclaimerExam.name}
+            </h2>
+            <p className="text-sm text-gray-600 mb-3">
+              This exam is remotely proctored. By continuing you agree
+              that during the attempt:
+            </p>
+            <ul className="text-sm text-gray-700 space-y-1.5 mb-4 list-disc pl-5">
+              <li>Your <strong>webcam stays on</strong> and your face
+                remains visible to the camera.</li>
+              <li>Periodically your webcam frame is checked — absence,
+                extra people, or looking away are recorded.</li>
+              <li>Switching tabs or minimising the browser is recorded
+                as a violation.</li>
+              <li>Copy, paste, cut and right-click are disabled and
+                logged.</li>
+              <li>Flagged snapshots are reviewed by your instructor.</li>
+            </ul>
+
+            {camError && (
+              <p className="text-sm text-red-600 bg-red-50 p-2 rounded mb-3">
+                {camError}
+              </p>
+            )}
+
+            <div className="flex gap-2">
+              <button onClick={agreeAndStart} disabled={camChecking}
+                className="flex-1 bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50">
+                {camChecking
+                  ? 'Requesting camera...'
+                  : disclaimerExam.status === 'in_progress'
+                    ? 'I agree — resume exam'
+                    : 'I agree — start exam'}
+              </button>
+              <button onClick={() => setDisclaimerExam(null)}
+                disabled={camChecking}
+                className="px-4 bg-gray-200 py-2 rounded text-sm">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

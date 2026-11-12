@@ -674,6 +674,50 @@ export default function ExamPlayer() {
     );
   }
 
+  // Proctored exams never render questions until the camera is live.
+  // The overlay video element stays mounted so the stream can attach.
+  const cameraGate = proctored && proctor.status !== 'active';
+  if (cameraGate && !loadError && !submitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        {proctorOverlay}
+        <div className="bg-white p-8 rounded shadow w-full max-w-md text-center">
+          {proctor.status === 'no_camera' ? (
+            <>
+              <h1 className="text-lg font-bold text-red-600 mb-2">
+                Camera required
+              </h1>
+              <p className="text-sm text-gray-600 mb-4">
+                This exam is proctored — it cannot continue without a
+                working camera. Allow camera access in your browser and
+                retry.
+              </p>
+              <button onClick={proctor.retry}
+                className="w-full bg-blue-600 text-white py-2 rounded text-sm mb-2 hover:bg-blue-700">
+                Retry camera
+              </button>
+              <button onClick={() => navigate('/dashboard')}
+                className="w-full bg-gray-200 py-2 rounded text-sm">
+                Leave exam
+              </button>
+            </>
+          ) : (
+            <>
+              <Loader />
+              <h1 className="text-lg font-bold mt-4 mb-2">
+                Waiting for camera
+              </h1>
+              <p className="text-sm text-gray-600">
+                Allow camera access when your browser asks — the exam
+                will start automatically.
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (questions.length === 0) {
     return (
       <>
