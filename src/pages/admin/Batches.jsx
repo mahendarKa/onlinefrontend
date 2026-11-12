@@ -171,7 +171,7 @@ export default function Batches() {
         <button type="button" onClick={toggleForm}
           title={showForm ? 'Close form' : 'New batch'}
           className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center">
-          {showForm ? <svg className='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round'><path d='M18 6 6 18M6 6l12 12' /></svg> : <svg className='w-4 h-4' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round'><path d='M12 5v14M5 12h14' /></svg>}
+          {showForm ? <svg className='w-6 h-6' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='3' strokeLinecap='round'><path d='M18 6 6 18M6 6l12 12' /></svg> : <svg className='w-6 h-6' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='3' strokeLinecap='round'><path d='M12 5v14M5 12h14' /></svg>}
         </button>
       </div>
 

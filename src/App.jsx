@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 
 import Login from './pages/Login';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/Users';
 import AdminCourses from './pages/admin/Courses';
 import AdminBatches from './pages/admin/Batches';
@@ -13,6 +14,7 @@ import Exams from './pages/Exams';
 import ExamDetail from './pages/ExamDetail';
 import Grading from './pages/Grading';
 import Monitoring from './pages/Monitoring';
+import TeacherDashboard from './pages/TeacherDashboard';
 import StudentDashboard from './pages/student/Dashboard';
 import ExamPlayer from './pages/student/ExamPlayer';
 import StudentResults from './pages/student/Results';
@@ -30,7 +32,10 @@ function HomeRedirect() {
   if (!user) return <Navigate to="/login" replace />;
   if (user.role === 'student') return <Navigate to="/dashboard" replace />;
   if (user.role === 'admin' || user.role === 'superadmin') {
-    return <Navigate to="/admin/users" replace />;
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+  if (user.role === 'teacher') {
+    return <Navigate to="/teacher/dashboard" replace />;
   }
   return <Navigate to="/exams" replace />;
 }
@@ -50,11 +55,13 @@ export default function App() {
         <Route path="/" element={<HomeRedirect />} />
 
         {/* Admin + Superadmin */}
+        <Route path="/admin/dashboard" element={<ProtectedRoute roles={ADMIN_ROLES}><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute roles={ADMIN_ROLES}><AdminUsers /></ProtectedRoute>} />
         <Route path="/admin/courses" element={<ProtectedRoute roles={ADMIN_ROLES}><AdminCourses /></ProtectedRoute>} />
         <Route path="/admin/batches" element={<ProtectedRoute roles={ADMIN_ROLES}><AdminBatches /></ProtectedRoute>} />
 
         {/* Teacher only */}
+        <Route path="/teacher/dashboard" element={<ProtectedRoute roles={['teacher']}><TeacherDashboard /></ProtectedRoute>} />
         <Route path="/batches" element={<ProtectedRoute roles={['teacher']}><Batches /></ProtectedRoute>} />
 
         {/* Teacher + Admin + Superadmin */}
