@@ -14,6 +14,7 @@ const ICONS = {
   grading: 'M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10',
   monitoring: 'M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z',
   audit: 'M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z',
+  approvals: 'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
   results: 'M2.25 18L9 11.25l4.306 4.306a11.95 11.95 0 015.814-5.518l2.74-1.22m0 0l-5.94-2.281m5.94 2.28l-2.28 5.941',
   attempts: 'M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z',
   notifications: 'M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0',
@@ -32,6 +33,7 @@ const LINK_ICONS = {
   '/grading': 'grading',
   '/monitoring': 'monitoring',
   '/admin/audit-logs': 'audit',
+  '/admin/approvals': 'approvals',
   '/dashboard': 'exams',
   '/results': 'results',
   '/attempts': 'attempts',
@@ -59,6 +61,7 @@ const NAV = {
     { to: '/exams', label: 'Exams' },
     { to: '/grading', label: 'Grading' },
     { to: '/monitoring', label: 'Monitoring' },
+    { to: '/admin/approvals', label: 'Approvals' },
     { to: '/admin/audit-logs', label: 'Audit Logs' },
   ],
   admin: [
@@ -70,6 +73,7 @@ const NAV = {
     { to: '/exams', label: 'Exams' },
     { to: '/grading', label: 'Grading' },
     { to: '/monitoring', label: 'Monitoring' },
+    { to: '/admin/approvals', label: 'Approvals' },
   ],
   teacher: [
     { to: '/teacher/dashboard', label: 'Dashboard' },
@@ -117,6 +121,7 @@ export default function Layout() {
   const [me, setMe] = useState(user);
   const [unread, setUnread] = useState(0);
   const [pendingGrading, setPendingGrading] = useState(0);
+  const [pendingApprovals, setPendingApprovals] = useState(0);
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem('sidebar:collapsed') === '1'
   );
@@ -150,9 +155,19 @@ export default function Layout() {
       window.addEventListener('grading:refresh', refreshGrading);
     }
 
+    const refreshApprovals = () =>
+      api.get('/questions/change-requests/count')
+        .then(({ data }) => setPendingApprovals(data.count))
+        .catch(() => {});
+    if (['admin', 'superadmin'].includes(user?.role)) {
+      refreshApprovals();
+      window.addEventListener('approvals:refresh', refreshApprovals);
+    }
+
     return () => {
       window.removeEventListener('notifications:refresh', refreshUnread);
       window.removeEventListener('grading:refresh', refreshGrading);
+      window.removeEventListener('approvals:refresh', refreshApprovals);
     };
   }, []);
 
@@ -201,6 +216,11 @@ export default function Layout() {
                       {pendingGrading > 9 ? '9+' : pendingGrading}
                     </span>
                   )}
+                  {link.to === '/admin/approvals' && pendingApprovals > 0 && (
+                    <span className="absolute -top-1.5 -right-2 bg-amber-500 text-white text-[9px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-0.5 leading-none">
+                      {pendingApprovals > 9 ? '9+' : pendingApprovals}
+                    </span>
+                  )}
                 </span>
                 {link.label}
               </NavLink>
@@ -244,6 +264,11 @@ export default function Layout() {
                 {link.to === '/grading' && pendingGrading > 0 && (
                   <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-0.5 leading-none">
                     {pendingGrading > 9 ? '9+' : pendingGrading}
+                  </span>
+                )}
+                {link.to === '/admin/approvals' && pendingApprovals > 0 && (
+                  <span className="absolute -top-1.5 -right-2 bg-amber-500 text-white text-[9px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-0.5 leading-none">
+                    {pendingApprovals > 9 ? '9+' : pendingApprovals}
                   </span>
                 )}
               </span>

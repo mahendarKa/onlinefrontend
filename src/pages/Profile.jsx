@@ -71,7 +71,6 @@ export default function Profile() {
         <Row label="Email" value={me.email} />
         <Row label="Mobile number" value={me.mobile_number} />
         <Row label="Role" value={<span className="capitalize">{me.role}</span>} />
-        <Row label="Account status" value={me.is_active ? 'Active' : 'Inactive'} />
       </div>
     </div>
   );

@@ -62,7 +62,7 @@ export default function TeacherDashboard() {
     { label: 'In progress', value: data.attempts.in_progress, color: '#d97706' },
     { label: 'Submitted', value: data.attempts.submitted, color: '#2563eb' },
     { label: 'Evaluated', value: data.attempts.evaluated, color: '#059669' },
-    { label: 'Pending (not attempted)', value: data.attempts.pending, color: '#64748b' },
+    // { label: 'Pending (not attempted)', value: data.attempts.pending, color: '#64748b' },
   ];
 
   return (

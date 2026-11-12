@@ -376,6 +376,134 @@ export default function Questions() {
     return data.image_url;
   };
 
+  // Build the full desired state for a teacher change request. Mirrors
+  // saveTypeConfig but returns the data instead of writing it — the
+  // backend applies it atomically when an admin approves.
+  const buildChangePayload = async () => {
+    const t = form.type;
+    const payload = {
+      full_state: true,
+      base: {
+        category_id: Number(form.category_id),
+        name: form.name,
+        question_text: form.question_text,
+        default_mark: INFO_TYPES.includes(form.type)
+          ? 0 : Number(form.default_mark),
+      },
+    };
+
+    if (OPTION_TYPES.includes(t)) {
+      const prepared = [];
+      for (const [i, o] of options.entries()) {
+        if (!(o.option_text.trim() || o.image_file || o.image_url)) continue;
+        let image_url = o.image_url || null;
+        if (o.image_file) image_url = await uploadFile(o.image_file);
+        prepared.push({
+          option_text: o.option_text,
+          image_url,
+          is_correct: o.is_correct,
+          fraction: o.fraction,
+          sort_order: i,
+        });
+      }
+      payload.options = prepared;
+    } else if (t === 'truefalse') {
+      payload.truefalse = { true_answer: tfAnswer === 'true' };
+    } else if (t === 'shortanswer') {
+      payload.shortanswer = shortAnswer;
+    } else if (t === 'numerical') {
+      payload.numerical = {
+        answer_value: Number(numerical.answer_value),
+        tolerance: Number(numerical.tolerance),
+      };
+    } else if (t === 'match') {
+      payload.match = matchItems
+        .filter((m) => m.sub_question.trim() && m.sub_answer.trim())
+        .map((m, i) => ({
+          sub_question: m.sub_question,
+          sub_answer: m.sub_answer,
+          sort_order: i,
+        }));
+    } else if (t === 'essay') {
+      payload.essay = {
+        max_words: essay.max_words ? Number(essay.max_words) : null,
+      };
+    } else if (t === 'multianswer') {
+      payload.multianswer = {
+        answer_text: multiAnswer,
+        answer_format: 'text',
+      };
+    } else if (CALC_TYPES.includes(t)) {
+      payload.calculated = {
+        formula: calc.formula,
+        tolerance: Number(calc.tolerance) || 0,
+        units: calc.units.trim() || null,
+        datasets: datasets
+          .filter((d) => d.name.trim())
+          .map((d) => ({
+            name: d.name.trim().replace(/[{}]/g, ''),
+            min_value: Number(d.min_value),
+            max_value: Number(d.max_value),
+            decimals: Number(d.decimals) || 0,
+          })),
+      };
+    } else if (t === 'paragraph') {
+      payload.paragraph = { question_ids: paraLinks };
+    } else if (t === 'selectmissing') {
+      payload.gapselect = gapBlanks.flatMap((b) =>
+        b.options
+          .filter((o) => o.text.trim())
+          .map((o, i) => ({
+            blank_no: b.blank_no,
+            option_text: o.text.trim(),
+            is_correct: o.is_correct,
+            sort_order: i,
+          }))
+      );
+    } else if (t === 'ordering') {
+      const cur = orderItems.filter((o) => o.text.trim());
+      payload.ordering = cur.map((o, i) => ({
+        item_text: o.text.trim(),
+        position: i + 1,
+      }));
+    } else if (t === 'coding') {
+      const cur = testCases.filter((tc) => tc.expected_output.trim());
+      payload.coding = {
+        language: codingCfg.language,
+        starter_code: codingCfg.starter_code || null,
+        time_limit: Number(codingCfg.time_limit) || 5,
+        test_cases: cur.map((tc, i) => ({
+          input_text: tc.input_text || null,
+          expected_output: tc.expected_output,
+          is_hidden: !!tc.is_hidden,
+          marks: Number(tc.marks) || 1,
+          sort_order: i,
+        })),
+      };
+    } else if (t === 'description') {
+      payload.description = { content: form.question_text };
+    }
+
+    if (t === 'image') {
+      const imgs = editImages.map((img) => ({
+        image_url: img.image_url,
+        alt_text: img.alt_text || null,
+        position: img.position ?? 0,
+      }));
+      if (hasQImage && imageQ.file) {
+        const url = await uploadFile(imageQ.file);
+        imgs.push({
+          image_url: url,
+          alt_text: imageQ.alt_text.trim() || null,
+          position: imgs.length,
+        });
+      }
+      payload.images = imgs;
+    }
+
+    return payload;
+  };
+
   // Persist the type-specific config while editing an existing question.
   const saveTypeConfig = async (qid) => {
     const t = form.type;
@@ -562,6 +690,19 @@ export default function Questions() {
     // Update: save base fields plus the type-specific config.
     if (editId) {
       try {
+        if (!isAdminUser) {
+          // Teacher edits are queued for admin approval — nothing is
+          // written until an admin approves the request.
+          const payload = await buildChangePayload();
+          await api.post(`/questions/${editId}/change-request`, {
+            action: 'update',
+            payload,
+          });
+          setMessage('Change sent for admin approval');
+          cancelEdit();
+          load();
+          return;
+        }
         await api.put(`/questions/${editId}`, {
           category_id: Number(form.category_id),
           name: form.name,
@@ -734,8 +875,15 @@ export default function Questions() {
 
   const remove = async (id) => {
     if (!window.confirm('Delete this question?')) return;
-    await api.delete(`/questions/${id}`);
-    load();
+    try {
+      const { data } = await api.delete(`/questions/${id}`);
+      if (data?.pending) {
+        setMessage('Deletion sent for admin approval');
+      }
+      load();
+    } catch (err) {
+      setError(detailText(err, 'Failed to delete question'));
+    }
   };
 
   const filteredQuestions = questions.filter(
@@ -1431,16 +1579,47 @@ export default function Questions() {
           {pg.items.map((q) => (
             <tr key={q.id} className="border-b">
               <td className="p-3">{q.id}</td>
-              <td>{q.name}</td>
+              <td>
+                {q.name}
+                {q.has_pending_change && (
+                  <span className="ml-2 text-[10px] font-semibold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded whitespace-nowrap">
+                    pending approval
+                  </span>
+                )}
+                {q.in_attempted_exam && (
+                  <span className="ml-2 text-[10px] font-semibold bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded whitespace-nowrap"
+                    title="Part of an exam students have attempted">
+                    attempted exam
+                  </span>
+                )}
+              </td>
               <td className="capitalize">{q.type}</td>
               <td>{q.default_mark}</td>
               <td className="max-w-xs truncate">{q.question_text}</td>
               {isAdminUser && <td>{q.creator_name || '-'}</td>}
               <td className="space-x-2">
-                <button onClick={() => startEdit(q)}
-                  className="text-blue-600 hover:underline">Edit</button>
-                <button onClick={() => remove(q.id)}
-                  className="text-red-600 hover:underline">Delete</button>
+                {(() => {
+                  const lockTip = q.in_attempted_exam
+                    ? 'Part of an exam students have attempted'
+                    : q.has_pending_change
+                      ? 'Change pending admin approval'
+                      : '';
+                  const dis = 'disabled:text-gray-300 disabled:no-underline disabled:cursor-not-allowed';
+                  return (
+                    <>
+                      <button onClick={() => startEdit(q)} title={lockTip}
+                        disabled={!!lockTip}
+                        className={`text-blue-600 hover:underline ${dis}`}>
+                        Edit
+                      </button>
+                      <button onClick={() => remove(q.id)} title={lockTip}
+                        disabled={!!lockTip}
+                        className={`text-red-600 hover:underline ${dis}`}>
+                        Delete
+                      </button>
+                    </>
+                  );
+                })()}
               </td>
             </tr>
           ))}

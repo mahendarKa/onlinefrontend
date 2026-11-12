@@ -22,6 +22,7 @@ import AttemptHistory from './pages/student/AttemptHistory';
 import Profile from './pages/Profile';
 import Notifications from './pages/Notifications';
 import AuditLogs from './pages/admin/AuditLogs';
+import Approvals from './pages/admin/Approvals';
 
 const ADMIN_ROLES = ['admin', 'superadmin'];
 const STAFF_ROLES = ['admin', 'superadmin', 'teacher'];
@@ -59,6 +60,7 @@ export default function App() {
         <Route path="/admin/users" element={<ProtectedRoute roles={ADMIN_ROLES}><AdminUsers /></ProtectedRoute>} />
         <Route path="/admin/courses" element={<ProtectedRoute roles={ADMIN_ROLES}><AdminCourses /></ProtectedRoute>} />
         <Route path="/admin/batches" element={<ProtectedRoute roles={ADMIN_ROLES}><AdminBatches /></ProtectedRoute>} />
+        <Route path="/admin/approvals" element={<ProtectedRoute roles={ADMIN_ROLES}><Approvals /></ProtectedRoute>} />
 
         {/* Teacher only */}
         <Route path="/teacher/dashboard" element={<ProtectedRoute roles={['teacher']}><TeacherDashboard /></ProtectedRoute>} />
