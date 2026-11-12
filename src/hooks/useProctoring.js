@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import api from '../api/client';
+import {
+  frameDelta, realCameraFrames, sampleLuma,
+} from '../utils/camera';
 
 // How often the webcam frame is analysed (ms).
 const CHECK_INTERVAL = 3000;
@@ -68,7 +71,6 @@ export default function useProctoring({ attemptId, enabled }) {
     let cancelled = false;
     let stream = null;
     let checkTimer = null;
-    let watchdog = null;
     let darkWatch = null;
     const lastSent = {};
     const streak = {};
@@ -198,35 +200,39 @@ export default function useProctoring({ attemptId, enabled }) {
         }
       };
       // A covered camera doesn't mute the track — it streams pure
-      // black frames. Sample luminance; near-total darkness across
-      // two consecutive checks gates the exam (a genuinely dark room
-      // can't proctor anyway).
-      let darkStreak = 0;
-      let blockedByDark = false;
+      // black frames; an OS-disabled camera streams a FROZEN
+      // placeholder (grey icon) that never changes. A real sensor
+      // always has noise, so both are caught by frame-delta checks.
+      const lumaCtx = document.createElement('canvas');
+      lumaCtx.width = 16;
+      lumaCtx.height = 16;
+      const luma2d = lumaCtx.getContext('2d', { willReadFrequently: true });
+      const lumaPrev = new Float32Array(256);
+      const lumaCur = new Float32Array(256);
+      let haveLumaPrev = false;
+      let badStreak = 0;
+      let blockedByFeed = false;
       darkWatch = setInterval(() => {
         const v = videoRef.current;
         if (cancelled || !v || v.readyState < 2 || !v.videoWidth) return;
-        const c = document.createElement('canvas');
-        c.width = 16;
-        c.height = 16;
-        c.getContext('2d').drawImage(v, 0, 0, 16, 16);
-        const d = c.getContext('2d').getImageData(0, 0, 16, 16).data;
-        let sum = 0;
-        for (let i = 0; i < d.length; i += 4) {
-          sum += (d[i] * 299 + d[i + 1] * 587 + d[i + 2] * 114) / 1000;
-        }
-        if (sum / (d.length / 4) < 8) {
-          darkStreak += 1;
-          if (darkStreak >= 2) {
-            darkStreak = 0;
-            blockedByDark = true;
-            loseCamera('Camera produces only black frames (cover closed?)');
+        const avg = sampleLuma(v, luma2d, lumaCur);
+        const static_ = haveLumaPrev && frameDelta(lumaPrev, lumaCur) < 0.5;
+        lumaPrev.set(lumaCur);
+        haveLumaPrev = true;
+        if (avg < 8 || static_) {
+          badStreak += 1;
+          if (badStreak >= 2) {
+            badStreak = 0;
+            blockedByFeed = true;
+            loseCamera(avg < 8
+              ? 'Camera produces only black frames (cover closed?)'
+              : 'Camera feed is frozen or replaced');
           }
         } else {
-          darkStreak = 0;
-          // Cap opened again → unblock without needing Retry.
-          if (blockedByDark) {
-            blockedByDark = false;
+          badStreak = 0;
+          // Feed recovered → unblock without needing Retry.
+          if (blockedByFeed) {
+            blockedByFeed = false;
             setStatus('active');
           }
         }
@@ -247,23 +253,22 @@ export default function useProctoring({ attemptId, enabled }) {
       if (video) {
         video.srcObject = stream;
         video.play().catch(() => {});
-        // Frames actually rendered → truly active.
-        video.addEventListener('playing', () => {
-          if (!cancelled) setStatus('active');
-        });
-        // No frames within a few seconds → treat as no camera.
-        watchdog = setTimeout(() => {
-          if (!cancelled && video.readyState < 2 && video.videoWidth === 0) {
-            loseCamera('Camera produced no video');
-          }
-        }, 4000);
       }
-      if (stream.getVideoTracks().some((t) => t.muted)) {
+      // 'active' requires PROOF of live frames: a non-black frame
+      // that changes over time. Blocks muted tracks, camera caps,
+      // OS-disabled feeds and frozen drivers before the gate opens.
+      const live = await realCameraFrames(video);
+      if (cancelled) return;
+      if (live && !stream.getVideoTracks().some((t) => t.muted)) {
+        setStatus('active');
+      } else {
+        // darkWatch keeps running — when real frames appear it
+        // unblocks automatically via blockedByFeed.
+        blockedByFeed = true;
         setStatus('no_camera');
         post('camera_denied',
-          'Camera produced no video (cap closed or privacy switch)');
-      } else {
-        setStatus('active');
+          'Camera produced no real video (cap, privacy switch or disabled camera)');
+        return;
       }
 
       const faceapi = await loadFaceApi();
@@ -280,7 +285,6 @@ export default function useProctoring({ attemptId, enabled }) {
     return () => {
       cancelled = true;
       clearInterval(checkTimer);
-      clearTimeout(watchdog);
       clearInterval(darkWatch);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('blur', onBlur);

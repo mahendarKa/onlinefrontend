@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { detailText } from '../../api/client';
 import { apiDate } from '../../utils/datetime';
+import { probeCameraStream } from '../../utils/camera';
 import Pagination, { usePager } from '../../components/Pagination';
 import Loader from '../../components/Loader';
 
@@ -56,7 +57,18 @@ export default function Dashboard() {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
       });
+      // Permission alone isn't enough — a closed cap or disabled
+      // camera streams black/frozen frames. Require live frames.
+      const live = await probeCameraStream(stream);
       stream.getTracks().forEach((t) => t.stop());
+      if (!live) {
+        setCamError(
+          'Your camera is not producing video — open the camera ' +
+          'cover or enable camera access, then try again.'
+        );
+        setCamChecking(false);
+        return;
+      }
     } catch {
       setCamError(
         'Camera access is required for this exam. Allow camera ' +
@@ -209,7 +221,7 @@ export default function Dashboard() {
               <button onClick={agreeAndStart} disabled={camChecking}
                 className="flex-1 bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50">
                 {camChecking
-                  ? 'Requesting camera...'
+                  ? 'Checking camera...'
                   : disclaimerExam.status === 'in_progress'
                     ? 'I agree — resume exam'
                     : 'I agree — start exam'}
