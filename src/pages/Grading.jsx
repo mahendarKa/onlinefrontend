@@ -50,6 +50,7 @@ export default function Grading() {
         is_correct: isCorrect,
       });
       load();
+      window.dispatchEvent(new Event('grading:refresh'));
     } catch (err) {
       setError(detailText(err, 'Evaluation failed'));
     }

@@ -116,6 +116,7 @@ export default function Layout() {
   // Fresh profile (avatar may change after login).
   const [me, setMe] = useState(user);
   const [unread, setUnread] = useState(0);
+  const [pendingGrading, setPendingGrading] = useState(0);
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem('sidebar:collapsed') === '1'
   );
@@ -139,8 +140,20 @@ export default function Layout() {
 
     refreshUnread();
     window.addEventListener('notifications:refresh', refreshUnread);
-    return () =>
+
+    const refreshGrading = () =>
+      api.get('/results/pending-evaluation-count')
+        .then(({ data }) => setPendingGrading(data.count))
+        .catch(() => {});
+    if (['admin', 'superadmin', 'teacher'].includes(user?.role)) {
+      refreshGrading();
+      window.addEventListener('grading:refresh', refreshGrading);
+    }
+
+    return () => {
       window.removeEventListener('notifications:refresh', refreshUnread);
+      window.removeEventListener('grading:refresh', refreshGrading);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -181,7 +194,14 @@ export default function Layout() {
                   }`
                 }
               >
-                <Icon name={LINK_ICONS[link.to]} className="w-4 h-4" />
+                <span className="relative shrink-0">
+                  <Icon name={LINK_ICONS[link.to]} className="w-4 h-4" />
+                  {link.to === '/grading' && pendingGrading > 0 && (
+                    <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-0.5 leading-none">
+                      {pendingGrading > 9 ? '9+' : pendingGrading}
+                    </span>
+                  )}
+                </span>
                 {link.label}
               </NavLink>
             ))}
@@ -219,7 +239,14 @@ export default function Layout() {
                 }`
               }
             >
-              <Icon name={LINK_ICONS[link.to]} />
+              <span className="relative shrink-0">
+                <Icon name={LINK_ICONS[link.to]} />
+                {link.to === '/grading' && pendingGrading > 0 && (
+                  <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[9px] font-bold rounded-full h-4 min-w-4 flex items-center justify-center px-0.5 leading-none">
+                    {pendingGrading > 9 ? '9+' : pendingGrading}
+                  </span>
+                )}
+              </span>
               {!collapsed && link.label}
             </NavLink>
           ))}
