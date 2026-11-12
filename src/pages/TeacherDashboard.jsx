@@ -9,24 +9,31 @@ const ICON = {
   attempted: 'M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 019 9v.375M10.125 2.25A3.375 3.375 0 0113.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 013.375 3.375M9 15l2.25 2.25L15 12',
 };
 
-function ScorerCard({ title, scorer, tone, badge }) {
+function ScorerList({ title, scorers, tone, rankTone }) {
   return (
     <div className={`rounded-xl shadow-sm border p-5 ${tone}`}>
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-semibold uppercase tracking-wide">{title}</p>
-        {badge}
-      </div>
-      {scorer ? (
-        <>
-          <p className="text-lg font-bold truncate">{scorer.student_name || 'Student'}</p>
-          <p className="text-sm opacity-80 truncate">{scorer.exam_name}</p>
-          <p className="text-3xl font-bold mt-2">{scorer.percentage}%</p>
-          <p className="text-xs opacity-80 mt-1">
-            {scorer.marks} marks · {scorer.pass_fail}
-          </p>
-        </>
-      ) : (
+      <p className="text-xs font-semibold uppercase tracking-wide mb-3">{title}</p>
+      {scorers.length === 0 ? (
         <p className="text-sm opacity-70">No evaluated results yet.</p>
+      ) : (
+        <ol className="space-y-2">
+          {scorers.map((s, i) => (
+            <li key={i} className="flex items-center gap-3">
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${rankTone}`}>
+                {i + 1}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold truncate">
+                  {s.student_name || 'Student'}
+                </p>
+                <p className="text-xs opacity-70 truncate">
+                  {s.exam_name} · {s.marks} marks · {s.pass_fail}
+                </p>
+              </div>
+              <span className="text-sm font-bold shrink-0">{s.percentage}%</span>
+            </li>
+          ))}
+        </ol>
       )}
     </div>
   );
@@ -71,13 +78,13 @@ export default function TeacherDashboard() {
           icon={ICON.attempted} accent="bg-emerald-100 text-emerald-600" />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        <ScorerCard title="Top Scorer" scorer={data.top_scorer}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <ScorerList title="Top 10 Scorers" scorers={data.top_scorers}
           tone="bg-emerald-50 border-emerald-200 text-emerald-800"
-          badge={<span className="text-xl">★</span>} />
-        <ScorerCard title="Lowest Scorer" scorer={data.lowest_scorer}
+          rankTone="bg-emerald-200 text-emerald-900" />
+        <ScorerList title="Least 10 Scorers" scorers={data.lowest_scorers}
           tone="bg-red-50 border-red-200 text-red-800"
-          badge={<span className="text-xl">▼</span>} />
+          rankTone="bg-red-200 text-red-900" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

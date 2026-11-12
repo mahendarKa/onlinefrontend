@@ -205,14 +205,14 @@ export default function Layout() {
             </button>
           )}
         </div>
-        <nav className="flex-1 py-3">
+        <nav className="flex-1 min-h-0 overflow-y-auto py-2">
           {links.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               title={link.label}
               className={({ isActive }) =>
-                `flex items-center py-2.5 text-sm border-l-4 ${collapsed ? 'justify-center px-2' : 'gap-3 px-5'} ${
+                `flex items-center py-2 text-sm border-l-4 ${collapsed ? 'justify-center px-2' : 'gap-3 px-5'} ${
                   isActive
                     ? 'bg-blue-800 font-semibold border-amber-400'
                     : 'border-transparent hover:bg-blue-600'
