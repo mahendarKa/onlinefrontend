@@ -65,6 +65,11 @@ export default function Dashboard() {
       setCamChecking(false);
       return;
     }
+    // Fullscreen requires a user gesture — request it here, while the
+    // click is still active, so it survives the route change.
+    try {
+      await document.documentElement.requestFullscreen();
+    } catch { /* the player shows a re-enter banner */ }
     setCamChecking(false);
     setDisclaimerExam(null);
     startExam(exam);

@@ -68,6 +68,7 @@ export default function useProctoring({ attemptId, enabled }) {
     let cancelled = false;
     let stream = null;
     let checkTimer = null;
+    let watchdog = null;
     const lastSent = {};
     const streak = {};
 
@@ -186,22 +187,49 @@ export default function useProctoring({ attemptId, enabled }) {
         stream.getTracks().forEach((t) => t.stop());
         return;
       }
-      // If the webcam is unplugged/revoked mid-exam the track ends —
-      // drop back to the camera-required gate and flag it.
+      // Permission granted ≠ frames flowing: a camera cap or OS
+      // privacy switch leaves the track muted/black. Watch for that
+      // and for mid-exam loss, then drop back to the camera gate.
+      const loseCamera = (kind) => {
+        if (!cancelled) {
+          setStatus('no_camera');
+          post('camera_lost', kind);
+        }
+      };
       stream.getVideoTracks().forEach((t) => {
-        t.addEventListener('ended', () => {
-          if (!cancelled) {
-            setStatus('no_camera');
-            post('camera_lost', 'Webcam stream ended during the exam');
-          }
+        t.addEventListener('ended', () =>
+          loseCamera('Webcam stream ended during the exam')
+        );
+        t.addEventListener('mute', () =>
+          loseCamera('Camera stopped producing video')
+        );
+        // Camera re-enabled (cap/switch opened) → exam resumes.
+        t.addEventListener('unmute', () => {
+          if (!cancelled) setStatus('active');
         });
       });
       const video = videoRef.current;
       if (video) {
         video.srcObject = stream;
         video.play().catch(() => {});
+        // Frames actually rendered → truly active.
+        video.addEventListener('playing', () => {
+          if (!cancelled) setStatus('active');
+        });
+        // No frames within a few seconds → treat as no camera.
+        watchdog = setTimeout(() => {
+          if (!cancelled && video.readyState < 2 && video.videoWidth === 0) {
+            loseCamera('Camera produced no video');
+          }
+        }, 4000);
       }
-      setStatus('active');
+      if (stream.getVideoTracks().some((t) => t.muted)) {
+        setStatus('no_camera');
+        post('camera_denied',
+          'Camera produced no video (cap closed or privacy switch)');
+      } else {
+        setStatus('active');
+      }
 
       const faceapi = await loadFaceApi();
       if (cancelled) return;
@@ -217,6 +245,7 @@ export default function useProctoring({ attemptId, enabled }) {
     return () => {
       cancelled = true;
       clearInterval(checkTimer);
+      clearTimeout(watchdog);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('blur', onBlur);
       document.removeEventListener('copy', onCopy);

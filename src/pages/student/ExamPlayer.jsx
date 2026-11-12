@@ -463,6 +463,7 @@ export default function ExamPlayer() {
   const [fbError, setFbError] = useState('');
   const [loadError, setLoadError] = useState('');
   const [proctored, setProctored] = useState(false);
+  const [isFs, setIsFs] = useState(() => !!document.fullscreenElement);
   const saveTimer = useRef(null);
   const proctor = useProctoring({
     attemptId: Number(attemptId),
@@ -593,6 +594,16 @@ export default function ExamPlayer() {
 
   // Paragraph items are passages, not standalone pages — they have no
   // nav slot and only render above the questions linked to them.
+  useEffect(() => {
+    const sync = () => setIsFs(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', sync);
+    return () => document.removeEventListener('fullscreenchange', sync);
+  }, []);
+
+  const enterFs = () => {
+    document.documentElement.requestFullscreen().catch(() => {});
+  };
+
   const visible = useMemo(
     () => questions.filter((x) => x.type !== 'paragraph'),
     [questions]
@@ -746,6 +757,12 @@ export default function ExamPlayer() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {proctorOverlay}
+      {proctored && !isFs && (
+        <button onClick={enterFs}
+          className="bg-amber-500 hover:bg-amber-600 text-white text-sm py-1.5 w-full">
+          This exam runs in fullscreen — click here to enable
+        </button>
+      )}
       <header className="bg-white border-b px-4 md:px-6 py-3 flex flex-wrap gap-2 items-center justify-between">
         <span className="font-bold">Exam in progress</span>
         {deadline ? <Timer deadline={deadline} onExpire={submit} /> : <span />}
