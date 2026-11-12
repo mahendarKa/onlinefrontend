@@ -38,6 +38,7 @@ export default function AdminDashboard() {
     { label: 'In progress', value: data.attempts.in_progress, color: '#d97706' },
     { label: 'Submitted', value: data.attempts.submitted, color: '#2563eb' },
     { label: 'Evaluated', value: data.attempts.evaluated, color: '#059669' },
+    { label: 'Pending (not attempted)', value: data.attempts.pending, color: '#64748b' },
   ];
   const dayBars = data.attempts_last_7d.map((d) => ({
     label: d.date,
@@ -51,13 +52,13 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         <StatCard label="Total Users" value={t.users} icon={ICON.users}
-          accent="bg-blue-100 text-blue-600" />
+          accent="bg-blue-100 text-blue-600" to="/admin/users" />
         <StatCard label="Total Batches" value={t.batches} icon={ICON.batches}
-          accent="bg-violet-100 text-violet-600" />
+          accent="bg-violet-100 text-violet-600" to="/admin/batches" />
         <StatCard label="Total Questions" value={t.questions} icon={ICON.questions}
-          accent="bg-amber-100 text-amber-600" />
+          accent="bg-amber-100 text-amber-600" to="/questions" />
         <StatCard label="Total Exams" value={t.exams} icon={ICON.exams}
-          accent="bg-emerald-100 text-emerald-600"
+          accent="bg-emerald-100 text-emerald-600" to="/exams"
           sub={`${data.exams.active} active · ${data.exams.inactive} inactive`} />
       </div>
 

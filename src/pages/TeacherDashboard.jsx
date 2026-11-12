@@ -61,6 +61,7 @@ export default function TeacherDashboard() {
     { label: 'In progress', value: data.attempts.in_progress, color: '#d97706' },
     { label: 'Submitted', value: data.attempts.submitted, color: '#2563eb' },
     { label: 'Evaluated', value: data.attempts.evaluated, color: '#059669' },
+    { label: 'Pending (not attempted)', value: data.attempts.pending, color: '#64748b' },
   ];
 
   return (
@@ -69,25 +70,17 @@ export default function TeacherDashboard() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         <StatCard label="My Batches" value={t.batches} icon={ICON.batches}
-          accent="bg-violet-100 text-violet-600" />
+          accent="bg-violet-100 text-violet-600" to="/batches" />
         <StatCard label="Students in My Batches" value={t.students}
-          icon={ICON.students} accent="bg-blue-100 text-blue-600" />
+          icon={ICON.students} accent="bg-blue-100 text-blue-600" to="/batches" />
         <StatCard label="My Exams" value={t.exams} icon={ICON.exams}
-          accent="bg-amber-100 text-amber-600" />
+          accent="bg-amber-100 text-amber-600" to="/exams" />
         <StatCard label="Students Attempted" value={t.students_attempted}
-          icon={ICON.attempted} accent="bg-emerald-100 text-emerald-600" />
+          icon={ICON.attempted} accent="bg-emerald-100 text-emerald-600"
+          to="/monitoring" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-        <ScorerList title="Top 10 Scorers" scorers={data.top_scorers}
-          tone="bg-emerald-50 border-emerald-200 text-emerald-800"
-          rankTone="bg-emerald-200 text-emerald-900" />
-        <ScorerList title="Least 10 Scorers" scorers={data.lowest_scorers}
-          tone="bg-red-50 border-red-200 text-red-800"
-          rankTone="bg-red-200 text-red-900" />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
         <Panel title="Results">
           <Donut centerLabel="results" slices={[
             { label: 'Passed', value: data.results.passed, color: '#16a34a' },
@@ -100,6 +93,15 @@ export default function TeacherDashboard() {
         <Panel title="Score distribution">
           <VBars rows={distRows} />
         </Panel>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ScorerList title="Top 10 Scorers" scorers={data.top_scorers}
+          tone="bg-emerald-50 border-emerald-200 text-emerald-800"
+          rankTone="bg-emerald-200 text-emerald-900" />
+        <ScorerList title="Least 10 Scorers" scorers={data.lowest_scorers}
+          tone="bg-red-50 border-red-200 text-red-800"
+          rankTone="bg-red-200 text-red-900" />
       </div>
     </div>
   );

@@ -1,8 +1,11 @@
 // Lightweight chart primitives — no chart library, just SVG + Tailwind.
+import { Link } from 'react-router-dom';
 
-export function StatCard({ label, value, icon, accent = 'bg-blue-100 text-blue-600', sub }) {
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
+export function StatCard({ label, value, icon, accent = 'bg-blue-100 text-blue-600', sub, to }) {
+  const cls = `bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-4${
+    to ? ' hover:shadow-md hover:border-blue-300 transition cursor-pointer' : ''}`;
+  const inner = (
+    <>
       {icon && (
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${accent}`}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -17,8 +20,11 @@ export function StatCard({ label, value, icon, accent = 'bg-blue-100 text-blue-6
         <p className="text-xs text-gray-500 truncate">{label}</p>
         {sub && <p className="text-[11px] text-gray-400">{sub}</p>}
       </div>
-    </div>
+    </>
   );
+  return to
+    ? <Link to={to} className={cls}>{inner}</Link>
+    : <div className={cls}>{inner}</div>;
 }
 
 // Donut with a legend. slices: [{label, value, color}]
