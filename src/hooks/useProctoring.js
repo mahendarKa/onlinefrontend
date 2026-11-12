@@ -69,6 +69,7 @@ export default function useProctoring({ attemptId, enabled }) {
     let stream = null;
     let checkTimer = null;
     let watchdog = null;
+    let darkWatch = null;
     const lastSent = {};
     const streak = {};
 
@@ -196,6 +197,40 @@ export default function useProctoring({ attemptId, enabled }) {
           post('camera_lost', kind);
         }
       };
+      // A covered camera doesn't mute the track — it streams pure
+      // black frames. Sample luminance; near-total darkness across
+      // two consecutive checks gates the exam (a genuinely dark room
+      // can't proctor anyway).
+      let darkStreak = 0;
+      let blockedByDark = false;
+      darkWatch = setInterval(() => {
+        const v = videoRef.current;
+        if (cancelled || !v || v.readyState < 2 || !v.videoWidth) return;
+        const c = document.createElement('canvas');
+        c.width = 16;
+        c.height = 16;
+        c.getContext('2d').drawImage(v, 0, 0, 16, 16);
+        const d = c.getContext('2d').getImageData(0, 0, 16, 16).data;
+        let sum = 0;
+        for (let i = 0; i < d.length; i += 4) {
+          sum += (d[i] * 299 + d[i + 1] * 587 + d[i + 2] * 114) / 1000;
+        }
+        if (sum / (d.length / 4) < 8) {
+          darkStreak += 1;
+          if (darkStreak >= 2) {
+            darkStreak = 0;
+            blockedByDark = true;
+            loseCamera('Camera produces only black frames (cover closed?)');
+          }
+        } else {
+          darkStreak = 0;
+          // Cap opened again → unblock without needing Retry.
+          if (blockedByDark) {
+            blockedByDark = false;
+            setStatus('active');
+          }
+        }
+      }, CHECK_INTERVAL);
       stream.getVideoTracks().forEach((t) => {
         t.addEventListener('ended', () =>
           loseCamera('Webcam stream ended during the exam')
@@ -246,6 +281,7 @@ export default function useProctoring({ attemptId, enabled }) {
       cancelled = true;
       clearInterval(checkTimer);
       clearTimeout(watchdog);
+      clearInterval(darkWatch);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('blur', onBlur);
       document.removeEventListener('copy', onCopy);
