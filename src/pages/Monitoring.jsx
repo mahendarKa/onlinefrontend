@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import api, { detailText } from '../api/client';
+import api, { detailText, fileUrl } from '../api/client';
 import Pagination, { usePager } from '../components/Pagination';
+import { apiDate } from '../utils/datetime';
 import ResultDetailModal from '../components/ResultDetailModal';
 import Loader from '../components/Loader';
 
@@ -19,6 +20,10 @@ export default function Monitoring() {
   const [answers, setAnswers] = useState(null);
   const [loadingFull, setLoadingFull] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [vioMap, setVioMap] = useState({});    // attempt_id -> {count,last_at}
+  const [vioAttempt, setVioAttempt] = useState(null);
+  const [vioEvents, setVioEvents] = useState([]);
+  const [vioLoading, setVioLoading] = useState(false);
 
   const examsPg = usePager(exams);
   const attemptsPg = usePager(attempts);
@@ -61,13 +66,30 @@ export default function Monitoring() {
     setDetail(null);
     setAnswers(null);
     setAttemptsLoading(true);
+    setVioMap({});
     try {
-      const { data } = await api.get(
-        `/exam-monitoring/exams/${exam.exam_id}/attempts`
-      );
+      const [{ data }, vio] = await Promise.all([
+        api.get(`/exam-monitoring/exams/${exam.exam_id}/attempts`),
+        api.get(`/proctoring/exams/${exam.exam_id}/summary`).catch(() => ({ data: {} })),
+      ]);
       setAttempts(data);
+      setVioMap(vio.data || {});
     } finally {
       setAttemptsLoading(false);
+    }
+  };
+
+  const viewViolations = async (a) => {
+    setVioAttempt(a);
+    setVioEvents([]);
+    setVioLoading(true);
+    try {
+      const { data } = await api.get(
+        `/proctoring/attempts/${a.attempt_id}/events`
+      );
+      setVioEvents(data);
+    } finally {
+      setVioLoading(false);
     }
   };
 
@@ -206,6 +228,7 @@ export default function Monitoring() {
                   <th className="py-1 pr-4">Marks</th>
                   <th className="py-1 pr-4">%</th>
                   <th className="py-1 pr-4">Result</th>
+                  <th className="py-1 pr-4">Proctor</th>
                   <th className="py-1 pr-4"></th>
                 </tr>
               </thead>
@@ -219,6 +242,16 @@ export default function Monitoring() {
                     <td className="pr-4">{a.marks_obtained ?? '-'}</td>
                     <td className="pr-4">{a.percentage ?? '-'}</td>
                     <td className="pr-4">{a.pass_fail ?? '-'}</td>
+                    <td className="pr-4">
+                      {vioMap[a.attempt_id]?.count > 0 && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); viewViolations(a); }}
+                          className="text-xs bg-red-100 text-red-700 rounded px-2 py-0.5"
+                          title="View proctoring violations">
+                          &#x26A0; {vioMap[a.attempt_id].count}
+                        </button>
+                      )}
+                    </td>
                     <td>
                       <button onClick={(e) => { e.stopPropagation(); viewAttemptDetail(a); }}
                         className="text-blue-600 hover:underline">View</button>
@@ -226,7 +259,7 @@ export default function Monitoring() {
                   </tr>
                 ))}
                 {attempts.length === 0 && !attemptsLoading && (
-                  <tr><td colSpan={7} className="py-3 text-gray-400">No attempts yet</td></tr>
+                  <tr><td colSpan={8} className="py-3 text-gray-400">No attempts yet</td></tr>
                 )}
               </tbody>
             </table>
@@ -252,6 +285,47 @@ export default function Monitoring() {
           />
         )}
       </div>
+      {vioAttempt && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50"
+          onClick={() => setVioAttempt(null)}>
+          <div className="bg-white rounded shadow-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}>
+            <h2 className="font-bold mb-1">
+              Proctoring violations — {vioAttempt.student_name}
+            </h2>
+            <p className="text-xs text-gray-500 mb-3">
+              Attempt {vioAttempt.attempt_no} · {vioEvents.length} event(s)
+            </p>
+            {vioLoading && <Loader />}
+            {!vioLoading && vioEvents.length === 0 && (
+              <p className="text-sm text-gray-400">No violations recorded.</p>
+            )}
+            {!vioLoading && vioEvents.map((ev) => (
+              <div key={ev.id} className="border-b py-2 flex gap-3">
+                <div className="flex-1 text-sm">
+                  <span className="inline-block text-xs bg-red-100 text-red-700 rounded px-2 py-0.5 mr-2">
+                    {ev.event_type.replace(/_/g, ' ')}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {ev.created_at ? apiDate(ev.created_at).toLocaleString() : ''}
+                  </span>
+                  {ev.detail && (
+                    <p className="text-xs text-gray-500 mt-0.5">{ev.detail}</p>
+                  )}
+                </div>
+                {ev.snapshot_url && (
+                  <a href={fileUrl(ev.snapshot_url)} target="_blank" rel="noreferrer">
+                    <img src={fileUrl(ev.snapshot_url)} alt="snapshot"
+                      className="w-24 rounded border object-cover" />
+                  </a>
+                )}
+              </div>
+            ))}
+            <button onClick={() => setVioAttempt(null)}
+              className="mt-4 w-full bg-gray-200 py-1.5 rounded text-sm">Close</button>
+          </div>
+        </div>
+      )}
       {fbExam && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4"
           onClick={() => setFbExam(null)}>

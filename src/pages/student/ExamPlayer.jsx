@@ -6,6 +6,7 @@ import { java } from '@codemirror/lang-java';
 import { javascript } from '@codemirror/lang-javascript';
 import api, { fileUrl, detailText } from '../../api/client';
 import Loader from '../../components/Loader';
+import useProctoring from '../../hooks/useProctoring';
 import { apiDate } from '../../utils/datetime';
 
 function Timer({ deadline, onExpire }) {
@@ -461,7 +462,12 @@ export default function ExamPlayer() {
   const [fbSaving, setFbSaving] = useState(false);
   const [fbError, setFbError] = useState('');
   const [loadError, setLoadError] = useState('');
+  const [proctored, setProctored] = useState(false);
   const saveTimer = useRef(null);
+  const proctor = useProctoring({
+    attemptId: Number(attemptId),
+    enabled: proctored && !submitted,
+  });
 
   useEffect(() => {
     const load = async () => {
@@ -495,6 +501,7 @@ export default function ExamPlayer() {
         (x) => x.attempt_id === Number(attemptId)
       );
       const examInfo = dash.data.find((x) => x.exam_id === Number(examId));
+      setProctored(!!examInfo?.is_proctored);
       if (attempt?.start_time && examInfo) {
         const durationEnd =
           apiDate(attempt.start_time).getTime() +
@@ -596,6 +603,22 @@ export default function ExamPlayer() {
     [answerable, answers]
   );
 
+  const proctorOverlay = proctored ? (
+    <div className="fixed bottom-3 right-3 w-40 z-50">
+      <video ref={proctor.videoRef} autoPlay muted playsInline
+        className="w-full aspect-video rounded border shadow bg-black object-cover" />
+      <p className="text-center text-xs mt-1">
+        {proctor.status === 'active' ? (
+          <span className="text-red-600 font-medium">{'\u25CF'} Proctoring</span>
+        ) : proctor.status === 'no_camera' ? (
+          <span className="text-amber-600 font-medium">Camera off — flagged</span>
+        ) : (
+          <span className="text-gray-500">Starting camera...</span>
+        )}
+      </p>
+    </div>
+  ) : null;
+
   if (loadError) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -652,7 +675,12 @@ export default function ExamPlayer() {
   }
 
   if (questions.length === 0) {
-    return <Loader full label="Loading exam..." />;
+    return (
+      <>
+        <Loader full label="Loading exam..." />
+        {proctorOverlay}
+      </>
+    );
   }
 
   const q = visible[current];
@@ -673,6 +701,7 @@ export default function ExamPlayer() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
+      {proctorOverlay}
       <header className="bg-white border-b px-4 md:px-6 py-3 flex flex-wrap gap-2 items-center justify-between">
         <span className="font-bold">Exam in progress</span>
         {deadline ? <Timer deadline={deadline} onExpire={submit} /> : <span />}

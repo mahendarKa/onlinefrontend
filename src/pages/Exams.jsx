@@ -16,6 +16,7 @@ const EMPTY = {
   end_time: '',
   attempts_allowed: null,
   shuffle_questions: false,
+  is_proctored: false,
 };
 
 const nowLocal = () => {
@@ -114,6 +115,7 @@ export default function Exams() {
       end_time: toLocalInput(exam.end_time),
       attempts_allowed: exam.attempts_allowed || 1,
       shuffle_questions: !!exam.shuffle_questions,
+      is_proctored: !!exam.is_proctored,
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -198,11 +200,18 @@ export default function Exams() {
         <input placeholder="Description (optional)" value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           className="w-full border rounded px-3 py-2 mb-3" />
-        <label className="text-sm flex items-center gap-2 mb-3">
-          <input type="checkbox" checked={form.shuffle_questions}
-            onChange={(e) => setForm({ ...form, shuffle_questions: e.target.checked })} />
-          Shuffle questions
-        </label>
+        <div className="flex items-center gap-6 mb-3">
+          <label className="text-sm flex items-center gap-2">
+            <input type="checkbox" checked={form.shuffle_questions}
+              onChange={(e) => setForm({ ...form, shuffle_questions: e.target.checked })} />
+            Shuffle questions
+          </label>
+          <label className="text-sm flex items-center gap-2" title="Webcam face detection + tab-switch tracking during the exam">
+            <input type="checkbox" checked={form.is_proctored}
+              onChange={(e) => setForm({ ...form, is_proctored: e.target.checked })} />
+            Enable proctoring (webcam + activity monitoring)
+          </label>
+        </div>
         <button className="bg-green-600 text-white px-4 py-2 rounded">
           {editId ? 'Update Exam' : 'Create Exam'}
         </button>
