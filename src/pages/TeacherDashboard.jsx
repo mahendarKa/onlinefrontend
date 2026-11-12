@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../api/client';
 import { StatCard, Donut, HBars, VBars, Panel } from '../components/Charts';
+import Loader from '../components/Loader';
 
 const ICON = {
   batches: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25A2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z',
@@ -49,7 +50,7 @@ export default function TeacherDashboard() {
       .catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-sm text-gray-500">Loading…</p>;
+  if (loading) return <Loader full />;
   if (!data) return <p className="text-sm text-gray-500">Could not load dashboard.</p>;
 
   const t = data.totals;

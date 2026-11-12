@@ -5,6 +5,7 @@ import { python } from '@codemirror/lang-python';
 import { java } from '@codemirror/lang-java';
 import { javascript } from '@codemirror/lang-javascript';
 import api, { fileUrl, detailText } from '../../api/client';
+import Loader from '../../components/Loader';
 import { apiDate } from '../../utils/datetime';
 
 function Timer({ deadline, onExpire }) {
@@ -651,7 +652,7 @@ export default function ExamPlayer() {
   }
 
   if (questions.length === 0) {
-    return <p className="p-8">Loading exam...</p>;
+    return <Loader full label="Loading exam..." />;
   }
 
   const q = visible[current];

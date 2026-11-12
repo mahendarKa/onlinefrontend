@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api, { fileUrl } from '../api/client';
+import Loader from '../components/Loader';
 
 const AVATAR_COLORS = [
   'bg-blue-600', 'bg-blue-800', 'bg-amber-500',
@@ -49,7 +50,7 @@ export default function Profile() {
   }, []);
 
   if (error) return <p className="text-sm text-red-600">{error}</p>;
-  if (!me) return <p className="text-sm text-gray-500">Loading…</p>;
+  if (!me) return <Loader full />;
 
   const fullName = [me.first_name, me.last_name]
     .filter(Boolean).join(' ');

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api, { detailText } from '../api/client';
 import Pagination, { usePager } from '../components/Pagination';
+import Loader from '../components/Loader';
 
 export default function Grading() {
   const [pending, setPending] = useState([]);
@@ -10,16 +11,24 @@ export default function Grading() {
   const [typeFilter, setTypeFilter] = useState('');
   const [marks, setMarks] = useState({});
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    const [p, e] = await Promise.all([
-      api.get('/results/pending-evaluation', {
-        params: examFilter ? { exam_id: examFilter } : {},
-      }),
-      api.get('/exams/'),
-    ]);
-    setPending(p.data);
-    setExams(e.data);
+    setLoading(true);
+    try {
+      const [p, e] = await Promise.all([
+        api.get('/results/pending-evaluation', {
+          params: examFilter ? { exam_id: examFilter } : {},
+        }),
+        api.get('/exams/'),
+      ]);
+      setPending(p.data);
+      setExams(e.data);
+    } catch (err) {
+      setError(detailText(err, 'Failed to load pending evaluations'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, [examFilter]);
@@ -80,11 +89,13 @@ export default function Grading() {
 
       {error && <p className="mb-3 text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>}
 
-      {pending.length === 0 && (
+      {loading && <Loader />}
+
+      {!loading && pending.length === 0 && (
         <p className="text-gray-500 bg-white p-4 rounded shadow">Nothing pending evaluation.</p>
       )}
 
-      {pending.length > 0 && filtered.length === 0 && (
+      {!loading && pending.length > 0 && filtered.length === 0 && (
         <p className="text-gray-500 bg-white p-4 rounded shadow">No items match the current search/filters.</p>
       )}
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api, { fileUrl, detailText } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import Pagination, { usePager } from '../components/Pagination';
+import Loader from '../components/Loader';
 
 const TYPES = [
   'multichoice', 'multiselect', 'truefalse', 'shortanswer',
@@ -67,6 +68,7 @@ export default function Questions() {
   const [newCategory, setNewCategory] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
   const [showBulk, setShowBulk] = useState(false);
   const [csvFile, setCsvFile] = useState(null);
   const [bulkResult, setBulkResult] = useState(null);
@@ -82,7 +84,11 @@ export default function Questions() {
     setCategories(c.data);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load()
+      .catch(() => setError('Failed to load questions'))
+      .finally(() => setLoading(false));
+  }, []);
 
   const uploadCsv = async (e) => {
     e.preventDefault();
@@ -742,6 +748,8 @@ export default function Questions() {
   );
 
   const pg = usePager(filteredQuestions);
+
+  if (loading) return <Loader full />;
 
   return (
     <div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api, { detailText } from '../../api/client';
 import Pagination, { usePager } from '../../components/Pagination';
+import Loader from '../../components/Loader';
 
 const EMPTY = { name: '', code: '', description: '' };
 
@@ -11,13 +12,18 @@ export default function Courses() {
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
     const { data } = await api.get('/courses/');
     setCourses(data);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load()
+      .catch(() => setError('Failed to load courses'))
+      .finally(() => setLoading(false));
+  }, []);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -64,6 +70,8 @@ export default function Courses() {
     (c.description || '').toLowerCase().includes(search.toLowerCase())
   );
   const pg = usePager(filteredCourses);
+
+  if (loading) return <Loader full />;
 
   return (
     <div>

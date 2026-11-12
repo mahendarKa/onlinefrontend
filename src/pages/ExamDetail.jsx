@@ -4,6 +4,7 @@ import api, { detailText } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { apiDate, toApiUtc, toLocalInput } from '../utils/datetime';
 import Pagination, { usePager } from '../components/Pagination';
+import Loader from '../components/Loader';
 
 const nowLocal = () => {
   const d = new Date();
@@ -184,7 +185,7 @@ export default function ExamDetail() {
     load();
   };
 
-  if (!exam) return <p>Loading...</p>;
+  if (!exam) return <Loader full label="Loading exam..." />;
 
   // Only the creator (or admin/superadmin) may modify this exam;
   // batch co-teachers get a read-only view.

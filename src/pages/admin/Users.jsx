@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api, { fileUrl, detailText } from '../../api/client';
 import Pagination, { usePager } from '../../components/Pagination';
+import Loader from '../../components/Loader';
 import { useAuth } from '../../context/AuthContext';
 
 const EMPTY = { first_name: '', last_name: '', email: '', password: '', role: 'student', mobile_number: '', picFile: null };
@@ -25,6 +26,7 @@ export default function Users() {
   const [editId, setEditId] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   // Errors belonging to the create/edit forms — rendered inside the
   // form itself so they are visible even while the edit modal is open.
   const [formError, setFormError] = useState('');
@@ -55,7 +57,13 @@ export default function Users() {
     setUsers(data);
   };
 
-  useEffect(() => { load(); }, [roleFilter]);
+  useEffect(() => {
+    load()
+      .catch(() => setError('Failed to load users'))
+      .finally(() => setLoading(false));
+  }, [roleFilter]);
+
+  if (loading) return <Loader full />;
 
   const uploadPic = async (file) => {
     const fd = new FormData();

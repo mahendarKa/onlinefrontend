@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api, { detailText } from '../../api/client';
 import Pagination, { usePager } from '../../components/Pagination';
+import Loader from '../../components/Loader';
 
 const EMPTY_BATCH = { course_id: '', name: '', start_date: '', end_date: '', description: '' };
 
@@ -21,6 +22,7 @@ export default function Batches() {
   const [checkedTeachers, setCheckedTeachers] = useState(new Set());
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
     const [b, c, s, t] = await Promise.all([
@@ -35,7 +37,11 @@ export default function Batches() {
     setTeachers(t.data);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load()
+      .catch(() => setError('Failed to load batches'))
+      .finally(() => setLoading(false));
+  }, []);
 
   const selectBatch = async (batch) => {
     setSelected(batch);
@@ -163,6 +169,8 @@ export default function Batches() {
       b.name.toLowerCase().includes(nameFilter.toLowerCase()))
   );
   const pg = usePager(filteredBatches);
+
+  if (loading) return <Loader full />;
 
   return (
     <div>

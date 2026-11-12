@@ -4,6 +4,7 @@ import api from '../api/client';
 import { apiDate } from '../utils/datetime';
 import { useAuth } from '../context/AuthContext';
 import Pagination, { usePager } from '../components/Pagination';
+import Loader from '../components/Loader';
 
 const TYPE_STYLES = {
   'exam.assigned': 'bg-blue-100 text-blue-700',
@@ -102,7 +103,7 @@ export default function Notifications() {
         )}
       </div>
 
-      {loading && <p className="text-sm text-gray-500">Loading…</p>}
+      {loading && <Loader />}
       {!loading && items.length === 0 && (
         <p className="text-sm text-gray-500 bg-white rounded shadow p-6">
           No notifications yet.

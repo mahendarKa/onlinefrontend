@@ -4,6 +4,7 @@ import api, { detailText } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { toApiUtc, toLocalInput } from '../utils/datetime';
 import Pagination, { usePager } from '../components/Pagination';
+import Loader from '../components/Loader';
 
 const EMPTY = {
   course_id: '',
@@ -35,6 +36,7 @@ export default function Exams() {
   const [courseFilter, setCourseFilter] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
     const [e, c] = await Promise.all([
@@ -45,7 +47,11 @@ export default function Exams() {
     setCourses(c.data);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load()
+      .catch(() => setError('Failed to load exams'))
+      .finally(() => setLoading(false));
+  }, []);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -137,6 +143,8 @@ export default function Exams() {
       exam.name.toLowerCase().includes(nameFilter.toLowerCase()))
   );
   const pg = usePager(filteredExams);
+
+  if (loading) return <Loader full />;
 
   return (
     <div>

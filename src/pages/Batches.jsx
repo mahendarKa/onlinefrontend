@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api, { detailText } from '../api/client';
 import Pagination, { usePager } from '../components/Pagination';
+import Loader from '../components/Loader';
 
 // Read-only view for teachers: their batches and the students
 // enrolled in each one (list is already scoped by the backend).
@@ -13,6 +14,7 @@ export default function Batches() {
   const [batchStudents, setBatchStudents] = useState([]);
   const [batchTeachers, setBatchTeachers] = useState([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
     const [b, c, s, t] = await Promise.all([
@@ -27,7 +29,11 @@ export default function Batches() {
     setTeachers(t.data);
   };
 
-  useEffect(() => { load().catch(() => setError('Failed to load batches')); }, []);
+  useEffect(() => {
+    load()
+      .catch(() => setError('Failed to load batches'))
+      .finally(() => setLoading(false));
+  }, []);
 
   const selectBatch = async (batch) => {
     setSelected(batch);
@@ -55,6 +61,8 @@ export default function Batches() {
   };
 
   const pg = usePager(batches);
+
+  if (loading) return <Loader full />;
 
   return (
     <div>

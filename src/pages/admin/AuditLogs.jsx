@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api, { detailText } from '../../api/client';
 import { apiDate } from '../../utils/datetime';
+import Loader from '../../components/Loader';
 
 const PAGE_SIZE = 20;
 
@@ -77,7 +78,7 @@ export default function AuditLogs() {
       </form>
 
       {error && <p className="mb-3 text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>}
-      {loading && <p className="text-sm text-gray-500">Loading…</p>}
+      {loading && <Loader />}
 
       {!loading && (
         <>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api, { detailText } from '../../api/client';
 import { apiDate } from '../../utils/datetime';
 import Pagination, { usePager } from '../../components/Pagination';
+import Loader from '../../components/Loader';
 
 const STATUS_STYLE = {
   available: 'bg-green-100 text-green-700',
@@ -17,6 +18,7 @@ export default function Dashboard() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const load = async () => {
@@ -24,7 +26,11 @@ export default function Dashboard() {
     setExams(data);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load()
+      .catch(() => setError('Failed to load exams'))
+      .finally(() => setLoading(false));
+  }, []);
 
   const startExam = async (exam) => {
     setError('');
@@ -51,6 +57,8 @@ export default function Dashboard() {
       (e.description || '').toLowerCase().includes(q))
   );
   const pg = usePager(filtered);
+
+  if (loading) return <Loader full />;
 
   return (
     <div>

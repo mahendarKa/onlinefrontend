@@ -2,9 +2,11 @@
 import api, { detailText } from '../../api/client';
 import Pagination, { usePager } from '../../components/Pagination';
 import ResultDetailModal from '../../components/ResultDetailModal';
+import Loader from '../../components/Loader';
 
 export default function Results() {
   const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [resultFilter, setResultFilter] = useState('');
 
@@ -22,8 +24,13 @@ export default function Results() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api.get('/results/my-results').then((r) => setResults(r.data));
+    api.get('/results/my-results')
+      .then((r) => setResults(r.data))
+      .catch(() => setError('Failed to load results'))
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading) return <Loader full />;
 
   const view = async (attemptId) => {
     setError('');

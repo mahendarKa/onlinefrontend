@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import api from '../../api/client';
 import { apiDate } from '../../utils/datetime';
 import Pagination, { usePager } from '../../components/Pagination';
+import Loader from '../../components/Loader';
 
 export default function AttemptHistory() {
   const [history, setHistory] = useState({ attempts: [] });
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [resultFilter, setResultFilter] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const statuses = [...new Set(history.attempts.map((a) => a.status))].sort();
   const q = search.trim().toLowerCase();
@@ -21,8 +23,13 @@ export default function AttemptHistory() {
   const pg = usePager(filtered);
 
   useEffect(() => {
-    api.get('/attempt-history/my-attempts').then((r) => setHistory(r.data));
+    api.get('/attempt-history/my-attempts')
+      .then((r) => setHistory(r.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading) return <Loader full />;
 
   return (
     <div>

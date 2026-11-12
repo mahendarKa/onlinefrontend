@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api, { detailText } from '../api/client';
 import Pagination, { usePager } from '../components/Pagination';
 import ResultDetailModal from '../components/ResultDetailModal';
+import Loader from '../components/Loader';
 
 export default function Monitoring() {
   const [exams, setExams] = useState([]);
@@ -17,6 +18,7 @@ export default function Monitoring() {
   const [detailInfo, setDetailInfo] = useState(null); // {student_name, attempt_no}
   const [answers, setAnswers] = useState(null);
   const [loadingFull, setLoadingFull] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const examsPg = usePager(exams);
   const attemptsPg = usePager(attempts);
@@ -33,7 +35,7 @@ export default function Monitoring() {
       const map = {};
       sums.forEach((s, i) => { if (s) map[r.data[i].exam_id] = s.data; });
       setFbMap(map);
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const download = async (path, filename) => {
@@ -120,6 +122,10 @@ export default function Monitoring() {
       {error && <p className="mb-3 text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>}
 
       <div className="space-y-4">
+        {loading ? (
+          <Loader />
+        ) : (
+        <>
         <div className="overflow-x-auto self-start">
         <table className="bg-white rounded shadow text-sm w-full">
           <thead>
@@ -180,6 +186,8 @@ export default function Monitoring() {
         </div>
         <Pagination page={examsPg.page} pages={examsPg.pages}
           onChange={examsPg.setPage} />
+        </>
+        )}
 
         {selected && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4"
@@ -187,9 +195,7 @@ export default function Monitoring() {
             <div className="bg-white rounded shadow-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}>
             <h2 className="font-bold mb-3">Attempts — {selected.exam_name}</h2>
-            {attemptsLoading && (
-              <p className="text-sm text-gray-400">Loading...</p>
-            )}
+            {attemptsLoading && <Loader />}
             <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -258,7 +264,7 @@ export default function Monitoring() {
                 ({fbMap[fbExam.exam_id].total_feedback} responses)
               </p>
             )}
-            {fbLoading && <p className="text-sm text-gray-400">Loading...</p>}
+            {fbLoading && <Loader />}
             {!fbLoading && feedback.map((f) => (
               <div key={f.id} className="border-b py-2 text-sm">
                 <p className="text-amber-500">
