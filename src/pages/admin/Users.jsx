@@ -224,7 +224,9 @@ export default function Users() {
             className="border rounded px-3 py-1.5 text-sm"
           >
             <option value="">All roles</option>
-            {ROLES.map((r) => <option key={r} value={r} className="capitalize">{r}</option>)}
+            {ROLES.filter((r) => r !== 'superadmin' || isSuper).map((r) => (
+              <option key={r} value={r} className="capitalize">{r}</option>
+            ))}
           </select>
           <button
             onClick={() => { setShowBulk(!showBulk); setShowForm(false); setBulkResult(null); }}
