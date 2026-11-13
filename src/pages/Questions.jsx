@@ -1472,8 +1472,12 @@ export default function Questions() {
                     className="border rounded px-3 py-1.5 text-sm">
                     {CODING_LANGS.map((l) => {
                       const missing = toolchains[l] && !toolchains[l].available;
+                      // Only offer languages the server can run — but keep
+                      // the saved one visible so existing questions still
+                      // display correctly.
+                      if (missing && l !== codingCfg.language) return null;
                       return (
-                        <option key={l} value={l} disabled={missing}>
+                        <option key={l} value={l}>
                           {l}{missing ? ' (not installed)' : ''}
                         </option>
                       );
