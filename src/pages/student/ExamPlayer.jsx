@@ -550,6 +550,10 @@ export default function ExamPlayer() {
     setSubmitting(true);
     try {
       await api.post(`/student/exams/attempt/${attemptId}/submit`);
+      // Leave fullscreen so the submitted/feedback screen is normal.
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
       setSubmitted(true);
     } catch (err) {
       const detail = err.response?.data?.detail;
