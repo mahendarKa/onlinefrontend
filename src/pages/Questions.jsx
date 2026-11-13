@@ -15,6 +15,13 @@ const OPTION_TYPES = ['multichoice', 'multiselect', 'image'];
 
 const CALC_TYPES = ['calculated', 'calculatedsimple', 'calculatedmulti'];
 
+// Languages the backend executor understands. Availability is checked
+// against the server's installed toolchains at load time.
+const CODING_LANGS = [
+  'python', 'java', 'javascript', 'html',
+  'c', 'cpp', 'csharp', 'php', 'ruby', 'go',
+];
+
 // Types that are informational text only — no answer, no marks.
 const INFO_TYPES = ['description', 'paragraph'];
 
@@ -51,6 +58,7 @@ export default function Questions() {
   const [codingCfg, setCodingCfg] = useState({
     language: 'python', starter_code: '', time_limit: 5,
   });
+  const [toolchains, setToolchains] = useState({});
   const [testCases, setTestCases] = useState([
     { input_text: '', expected_output: '', marks: 1, is_hidden: false },
   ]);
@@ -88,6 +96,11 @@ export default function Questions() {
     load()
       .catch(() => setError('Failed to load questions'))
       .finally(() => setLoading(false));
+    // Which languages the server can actually run — best effort,
+    // an empty map just leaves every option enabled.
+    api.get('/questions/coding/toolchains')
+      .then((r) => setToolchains(r.data || {}))
+      .catch(() => {});
   }, []);
 
   const uploadCsv = async (e) => {
@@ -1457,17 +1470,21 @@ export default function Questions() {
                   <select value={codingCfg.language}
                     onChange={(e) => setCodingCfg({ ...codingCfg, language: e.target.value })}
                     className="border rounded px-3 py-1.5 text-sm">
-                    <option value="python">python</option>
-                    <option value="java">java</option>
-                    <option value="javascript">javascript</option>
-                    <option value="html">html</option>
-                    <option value="c">c</option>
-                    <option value="cpp">cpp</option>
-                    <option value="csharp">csharp</option>
-                    <option value="php">php</option>
-                    <option value="ruby">ruby</option>
-                    <option value="go">go</option>
+                    {CODING_LANGS.map((l) => {
+                      const missing = toolchains[l] && !toolchains[l].available;
+                      return (
+                        <option key={l} value={l} disabled={missing}>
+                          {l}{missing ? ' (not installed)' : ''}
+                        </option>
+                      );
+                    })}
                   </select>
+                  {toolchains[codingCfg.language] && !toolchains[codingCfg.language].available && (
+                    <p className="text-xs text-amber-600 mt-1">
+                      {codingCfg.language} isn't installed on the server —
+                      students' code can't run until it is.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs text-gray-500 block mb-1">Time limit (sec)</label>
