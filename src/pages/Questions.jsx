@@ -1460,6 +1460,13 @@ export default function Questions() {
                     <option value="python">python</option>
                     <option value="java">java</option>
                     <option value="javascript">javascript</option>
+                    <option value="html">html</option>
+                    <option value="c">c</option>
+                    <option value="cpp">cpp</option>
+                    <option value="csharp">csharp</option>
+                    <option value="php">php</option>
+                    <option value="ruby">ruby</option>
+                    <option value="go">go</option>
                   </select>
                 </div>
                 <div>

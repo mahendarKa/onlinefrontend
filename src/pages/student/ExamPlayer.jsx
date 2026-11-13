@@ -4,6 +4,9 @@ import CodeMirror from '@uiw/react-codemirror';
 import { python } from '@codemirror/lang-python';
 import { java } from '@codemirror/lang-java';
 import { javascript } from '@codemirror/lang-javascript';
+import { html } from '@codemirror/lang-html';
+import { cpp } from '@codemirror/lang-cpp';
+import { php } from '@codemirror/lang-php';
 import api, { fileUrl, detailText } from '../../api/client';
 import Loader from '../../components/Loader';
 import useProctoring from '../../hooks/useProctoring';
@@ -43,6 +46,17 @@ const CM_LANGS = {
   javascript: () => javascript(),
   js: () => javascript(),
   node: () => javascript(),
+  nodejs: () => javascript(),
+  html: () => html(),
+  html5: () => html(),
+  c: () => cpp(),
+  cpp: () => cpp(),
+  'c++': () => cpp(),
+  cxx: () => cpp(),
+  csharp: () => java(),   // closest installed C-family highlighter
+  'c#': () => java(),
+  cs: () => java(),
+  php: () => php(),
 };
 
 // IDE-style editor + "Run" against the question's visible test cases.
