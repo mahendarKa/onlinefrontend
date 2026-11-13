@@ -55,7 +55,7 @@ function noseOffsetRatio(landmarks, box) {
  * Returns { videoRef, status, aiActive } — render a <video> element
  * with videoRef for the proctor preview.
  */
-export default function useProctoring({ attemptId, enabled }) {
+export default function useProctoring({ attemptId, enabled, onViolation }) {
   const videoRef = useRef(null);
   const [status, setStatus] = useState('idle'); // idle|starting|active|no_camera
   const [aiActive, setAiActive] = useState(false);
@@ -83,6 +83,8 @@ export default function useProctoring({ attemptId, enabled }) {
         attempt_id: attemptId,
         event_type: type,
         detail: detail || null,
+      }).then((r) => {
+        if (r.data?.total != null) onViolation?.(r.data.total);
       }).catch(() => {});
     };
 
@@ -105,6 +107,8 @@ export default function useProctoring({ attemptId, enabled }) {
         fd.append('file', blob, 'snapshot.jpg');
         api.post('/proctoring/snapshots', fd, {
           headers: { 'Content-Type': 'multipart/form-data' },
+        }).then((r) => {
+          if (r.data?.total != null) onViolation?.(r.data.total);
         }).catch(() => {});
       }, 'image/jpeg', 0.7);
     };

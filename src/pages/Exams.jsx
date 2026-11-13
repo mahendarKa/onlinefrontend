@@ -17,6 +17,7 @@ const EMPTY = {
   attempts_allowed: null,
   shuffle_questions: false,
   is_proctored: false,
+  max_violations: null,
 };
 
 const nowLocal = () => {
@@ -79,6 +80,9 @@ export default function Exams() {
       duration_minutes: Number(form.duration_minutes),
       passing_percentage: Number(form.passing_percentage),
       attempts_allowed: Number(form.attempts_allowed),
+      max_violations: form.is_proctored && form.max_violations
+        ? Number(form.max_violations)
+        : null,
       start_time: toApiUtc(form.start_time),
       end_time: toApiUtc(form.end_time),
     };
@@ -116,6 +120,7 @@ export default function Exams() {
       attempts_allowed: exam.attempts_allowed || 1,
       shuffle_questions: !!exam.shuffle_questions,
       is_proctored: !!exam.is_proctored,
+      max_violations: exam.max_violations ?? null,
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -211,6 +216,19 @@ export default function Exams() {
               onChange={(e) => setForm({ ...form, is_proctored: e.target.checked })} />
             Enable proctoring (webcam + activity monitoring)
           </label>
+          {form.is_proctored && (
+            <label className="text-sm flex items-center gap-2"
+              title="Attempt auto-submits when this many violations are recorded. Blank = no limit.">
+              Max violations
+              <input type="number" min="1" placeholder="No limit"
+                value={form.max_violations ?? ''}
+                onChange={(e) => setForm({
+                  ...form,
+                  max_violations: e.target.value === '' ? null : e.target.value,
+                })}
+                className="border rounded px-2 py-1 w-24" />
+            </label>
+          )}
         </div>
         <button className="bg-green-600 text-white px-4 py-2 rounded">
           {editId ? 'Update Exam' : 'Create Exam'}

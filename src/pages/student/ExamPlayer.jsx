@@ -463,11 +463,15 @@ export default function ExamPlayer() {
   const [fbError, setFbError] = useState('');
   const [loadError, setLoadError] = useState('');
   const [proctored, setProctored] = useState(false);
+  const [maxVio, setMaxVio] = useState(null);
+  const [vioCount, setVioCount] = useState(0);
+  const [submitReason, setSubmitReason] = useState('');
   const [isFs, setIsFs] = useState(() => !!document.fullscreenElement);
   const saveTimer = useRef(null);
   const proctor = useProctoring({
     attemptId: Number(attemptId),
     enabled: proctored && !submitted,
+    onViolation: setVioCount,
   });
 
   useEffect(() => {
@@ -503,6 +507,13 @@ export default function ExamPlayer() {
       );
       const examInfo = dash.data.find((x) => x.exam_id === Number(examId));
       setProctored(!!examInfo?.is_proctored);
+      setMaxVio(examInfo?.max_violations ?? null);
+      if (examInfo?.is_proctored) {
+        // Resume-safe: counter continues from previously logged events.
+        api.get(`/proctoring/attempts/${attemptId}/count`)
+          .then((r) => setVioCount(r.data.total || 0))
+          .catch(() => {});
+      }
       if (attempt?.start_time && examInfo) {
         const durationEnd =
           apiDate(attempt.start_time).getTime() +
@@ -551,6 +562,15 @@ export default function ExamPlayer() {
       setSubmitting(false);
     }
   };
+
+  // Violation cap reached → end the attempt.
+  useEffect(() => {
+    if (proctored && maxVio != null && vioCount >= maxVio && !submitted) {
+      setSubmitReason('auto');
+      submit();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vioCount, maxVio, proctored, submitted]);
 
   // Feedback is optional — student can skip and just leave.
   const sendFeedback = async () => {
@@ -642,9 +662,19 @@ export default function ExamPlayer() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded shadow w-full max-w-md">
-          <h1 className="text-xl font-bold text-green-600 mb-1 text-center">
-            Exam submitted
+          <h1 className={`text-xl font-bold mb-1 text-center ${
+            submitReason === 'auto' ? 'text-red-600' : 'text-green-600'
+          }`}>
+            {submitReason === 'auto'
+              ? 'Exam auto-submitted'
+              : 'Exam submitted'}
           </h1>
+          {submitReason === 'auto' && (
+            <p className="text-sm text-red-600 bg-red-50 rounded p-2 mb-3 text-center">
+              The proctoring violation limit ({maxVio}) was reached,
+              so your attempt was ended automatically.
+            </p>
+          )}
           <p className="text-gray-500 text-sm text-center mb-4">
             How was this exam? Your feedback is optional.
           </p>
@@ -769,6 +799,13 @@ export default function ExamPlayer() {
         <span className="text-sm text-gray-500">
           Answered {answeredCount}/{answerable.length}
         </span>
+        {proctored && maxVio != null && (
+          <span className={`text-xs font-medium px-2 py-0.5 rounded ${
+            vioCount > 0 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+          }`}>
+            Violations {vioCount}/{maxVio}
+          </span>
+        )}
       </header>
 
       <div className="flex flex-col md:flex-row flex-1">

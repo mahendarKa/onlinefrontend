@@ -209,6 +209,12 @@ export default function Dashboard() {
               <li>Copy, paste, cut and right-click are disabled and
                 logged.</li>
               <li>Flagged snapshots are reviewed by your instructor.</li>
+              {disclaimerExam.max_violations && (
+                <li className="font-medium text-red-700">
+                  Reaching {disclaimerExam.max_violations} violations
+                  ends your attempt automatically.
+                </li>
+              )}
             </ul>
 
             {camError && (
