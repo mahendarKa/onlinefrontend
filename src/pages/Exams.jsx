@@ -31,6 +31,8 @@ export default function Exams() {
   const isAdminUser = ['admin', 'superadmin'].includes(user?.role);
   const [exams, setExams] = useState([]);
   const [courses, setCourses] = useState([]);
+  // Courses this teacher may create exams for (admin: all).
+  const [myCourses, setMyCourses] = useState([]);
   const [form, setForm] = useState(EMPTY);
   const [editId, setEditId] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -41,12 +43,14 @@ export default function Exams() {
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    const [e, c] = await Promise.all([
+    const [e, c, mc] = await Promise.all([
       api.get('/exams/'),
       api.get('/courses/'),
+      api.get('/courses/mine'),
     ]);
     setExams(e.data);
     setCourses(c.data);
+    setMyCourses(mc.data);
   };
 
   useEffect(() => {
@@ -171,7 +175,14 @@ export default function Exams() {
             onChange={(e) => setForm({ ...form, course_id: e.target.value })}
             className="border rounded px-3 py-2">
             <option value="">Course...</option>
-            {courses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            {myCourses.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            {form.course_id !== '' &&
+              !myCourses.some((c) => c.id === Number(form.course_id)) && (
+              <option value={form.course_id}>
+                {courses.find((c) => c.id === Number(form.course_id))?.name ||
+                  `Course ${form.course_id}`} (not assigned)
+              </option>
+            )}
           </select>
           <input required placeholder="Exam name" value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -201,6 +212,12 @@ export default function Exams() {
               onChange={(e) => setForm({ ...form, end_time: e.target.value })}
               className="border rounded px-3 py-1.5 w-full" />
           </div>
+          {!isAdminUser && myCourses.length === 0 && (
+            <p className="text-xs text-amber-600 col-span-full">
+              You aren't assigned to any batch yet — an admin must add you
+              to a batch before you can create exams.
+            </p>
+          )}
         </div>
         <input placeholder="Description (optional)" value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
