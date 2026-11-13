@@ -374,12 +374,16 @@ export default function Users() {
               <td className="space-x-2">
                 <button onClick={() => startEdit(u)}
                   className="text-blue-600 hover:underline">Edit</button>
-                <button onClick={() => toggleStatus(u.id)}
-                  className="text-gray-600 hover:underline">
-                  {u.is_active ? 'Deactivate' : 'Activate'}
-                </button>
-                <button onClick={() => remove(u.id)}
-                  className="text-red-600 hover:underline">Delete</button>
+                {u.id !== me?.id && (
+                  <>
+                    <button onClick={() => toggleStatus(u.id)}
+                      className="text-gray-600 hover:underline">
+                      {u.is_active ? 'Deactivate' : 'Activate'}
+                    </button>
+                    <button onClick={() => remove(u.id)}
+                      className="text-red-600 hover:underline">Delete</button>
+                  </>
+                )}
               </td>
             </tr>
           ))}
