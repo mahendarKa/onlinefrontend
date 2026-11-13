@@ -86,7 +86,7 @@ export default function TeacherDashboard() {
           <Donut centerLabel="results" slices={[
             { label: 'Passed', value: data.results.passed, color: '#16a34a' },
             { label: 'Failed', value: data.results.failed, color: '#dc2626' },
-            { label: 'Pending', value: data.results.pending || 0, color: '#d97706' },
+            { label: 'Pending', value: data.results.pending || 0, color: '#eab308' },
           ]} />
         </Panel>
         <Panel title="Attempts by status">

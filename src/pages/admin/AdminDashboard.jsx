@@ -12,7 +12,7 @@ const ICON = {
 
 const ROLE_COLORS = {
   student: '#2563eb',
-  teacher: '#7c3aed',
+  teacher: '#ea580c',
   admin: '#059669',
   superadmin: '#d97706',
 };
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
           <Donut centerLabel="results" slices={[
             { label: 'Passed', value: data.results.passed, color: '#16a34a' },
             { label: 'Failed', value: data.results.failed, color: '#dc2626' },
-            { label: 'Pending', value: data.results.pending || 0, color: '#d97706' },
+            { label: 'Pending', value: data.results.pending || 0, color: '#eab308' },
           ]} />
         </Panel>
       </div>
