@@ -6,6 +6,8 @@ import { useAuth } from '../../context/AuthContext';
 
 const EMPTY = { first_name: '', last_name: '', email: '', password: '', role: 'student', mobile_number: '', picFile: null };
 const ROLES = ['student', 'teacher', 'admin', 'superadmin'];
+// Only a superadmin sees or assigns admin-level accounts.
+const ELEVATED = ['admin', 'superadmin'];
 
 // Matches the backend rule: optional, but exactly 10 digits when given.
 const mobileError = (v) => {
@@ -224,7 +226,7 @@ export default function Users() {
             className="border rounded px-3 py-1.5 text-sm"
           >
             <option value="">All roles</option>
-            {ROLES.filter((r) => r !== 'superadmin' || isSuper).map((r) => (
+            {ROLES.filter((r) => !ELEVATED.includes(r) || isSuper).map((r) => (
               <option key={r} value={r} className="capitalize">{r}</option>
             ))}
           </select>
@@ -324,7 +326,7 @@ export default function Users() {
           <select value={form.role}
             onChange={(e) => setForm({ ...form, role: e.target.value })}
             className="border rounded px-3 py-2">
-            {ROLES.filter((r) => r !== 'superadmin' || isSuper).map((r) => (
+            {ROLES.filter((r) => !ELEVATED.includes(r) || isSuper).map((r) => (
               <option key={r} value={r}>{r}</option>
             ))}
           </select>
@@ -419,7 +421,7 @@ export default function Users() {
             <select value={editForm.role}
               onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
               className="w-full border rounded px-3 py-2 mb-3">
-              {ROLES.filter((r) => r !== 'superadmin' || isSuper).map((r) => (
+              {ROLES.filter((r) => !ELEVATED.includes(r) || isSuper).map((r) => (
                 <option key={r} value={r}>{r}</option>
               ))}
             </select>
