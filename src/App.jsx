@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Toaster from './components/Toast';
+import LoadingBar from './components/LoadingBar';
 import Layout from './components/Layout';
 
 import Login from './pages/Login';
@@ -101,6 +102,7 @@ export default function App() {
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
     <Toaster />
+    <LoadingBar />
     </>
   );
 }

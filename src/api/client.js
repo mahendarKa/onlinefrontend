@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { trackStart, trackEnd } from './loading';
 
 // API base URL. '/api' uses the vite dev proxy (local backend).
 // For a deployed backend, build with e.g.
@@ -40,16 +41,24 @@ export const detailText = (err, fallback = 'Request failed') => {
 };
 
 api.interceptors.request.use((config) => {
+  trackStart();
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
+}, (error) => {
+  trackEnd();
+  return Promise.reject(error);
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    trackEnd();
+    return response;
+  },
   (error) => {
+    trackEnd();
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
