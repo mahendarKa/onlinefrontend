@@ -178,9 +178,12 @@ export default function Batches() {
     }
   };
 
-  const userName = (id) => {
-    const u = [...students, ...teachers].find((x) => x.id === id);
-    return u ? u.name : `#${id}`;
+  const userById = (id) => [...students, ...teachers].find((x) => x.id === id);
+  const userLabel = (id) => {
+    const u = userById(id);
+    return u
+      ? <span>{u.name} <span className="text-gray-400">({u.email})</span></span>
+      : `#${id}`;
   };
 
   const filteredBatches = batches.filter((b) =>
@@ -321,7 +324,7 @@ export default function Batches() {
             <ul className="mb-4">
               {batchStudents.map((bs) => (
                 <li key={bs.id} className="flex justify-between py-1 border-b">
-                  <span>{userName(bs.user_id)}</span>
+                  <span>{userLabel(bs.user_id)}</span>
                   <button onClick={() => removeStudent(bs.id)}
                     className="text-red-600 hover:underline">Remove</button>
                 </li>
@@ -366,7 +369,7 @@ export default function Batches() {
             <ul>
               {batchTeachers.map((bt) => (
                 <li key={bt.id} className="flex justify-between py-1 border-b">
-                  <span>{userName(bt.user_id)}</span>
+                  <span>{userLabel(bt.user_id)}</span>
                   <button onClick={() => removeTeacher(bt.id)}
                     className="text-red-600 hover:underline">Remove</button>
                 </li>
