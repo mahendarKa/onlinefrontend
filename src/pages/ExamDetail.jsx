@@ -160,9 +160,13 @@ export default function ExamDetail() {
   };
 
   const removeQuestion = async (eqId) => {
-    await api.delete(`/exams/${examId}/questions/${eqId}`);
-    toast('Question removed from exam');
-    load();
+    try {
+      await api.delete(`/exams/${examId}/questions/${eqId}`);
+      toast('Question removed from exam');
+      load();
+    } catch (err) {
+      toast(detailText(err, 'Remove failed'), 'error');
+    }
   };
 
   const assignBatch = async (e) => {
@@ -183,9 +187,13 @@ export default function ExamDetail() {
   };
 
   const removeBatch = async (assignmentId) => {
-    await api.delete(`/exams/${examId}/batches/${assignmentId}`);
-    toast('Batch removed from exam');
-    load();
+    try {
+      await api.delete(`/exams/${examId}/batches/${assignmentId}`);
+      toast('Batch removed from exam');
+      load();
+    } catch (err) {
+      toast(detailText(err, 'Remove failed'), 'error');
+    }
   };
 
   if (!exam) return <Loader full label="Loading exam..." />;

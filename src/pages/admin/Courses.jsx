@@ -60,9 +60,13 @@ export default function Courses() {
 
   const remove = async (id) => {
     if (!window.confirm('Delete this course?')) return;
-    await api.delete(`/courses/${id}`);
-    toast('Course deleted');
-    load();
+    try {
+      await api.delete(`/courses/${id}`);
+      toast('Course deleted');
+      load();
+    } catch (err) {
+      toast(detailText(err, 'Delete failed'), 'error');
+    }
   };
 
   const filteredCourses = courses.filter((c) =>

@@ -2,11 +2,18 @@ import { useEffect, useState } from 'react';
 
 // Module-level event emitter: any file can call toast() without a
 // provider — Toaster listens for emitted items and auto-dismisses.
+// Items emitted before Toaster mounts are queued so they are never lost.
 const listeners = new Set();
+const queue = [];
 let seq = 0;
 
 export function toast(message, type = 'success') {
-  const item = { id: ++seq, message, type };
+  if (message === null || message === undefined || message === '') return;
+  const item = { id: ++seq, message: String(message), type };
+  if (!listeners.size) {
+    queue.push(item);
+    return;
+  }
   listeners.forEach((fn) => fn(item));
 }
 
@@ -44,6 +51,19 @@ const ANIMATION_CSS = `
 const VISIBLE_MS = 3200;
 const EXIT_MS = 350;
 
+// Inject keyframes once so the entry animation always resolves — the
+// <style> tag used to mount/unmount with the item list, which could
+// race the first toast's animation in some browsers.
+if (
+  typeof document !== 'undefined' &&
+  !document.getElementById('toast-anim-css')
+) {
+  const el = document.createElement('style');
+  el.id = 'toast-anim-css';
+  el.textContent = ANIMATION_CSS;
+  document.head.appendChild(el);
+}
+
 export default function Toaster() {
   const [items, setItems] = useState([]);
 
@@ -61,6 +81,8 @@ export default function Toaster() {
       );
     };
     listeners.add(onToast);
+    // Flush anything emitted before this listener registered.
+    queue.splice(0).forEach(onToast);
     return () => listeners.delete(onToast);
   }, []);
 
@@ -68,7 +90,6 @@ export default function Toaster() {
 
   return (
     <>
-      <style>{ANIMATION_CSS}</style>
       <div className="fixed top-5 right-5 z-[9999] space-y-3">
         {items.map((t) => {
           const theme = THEME[t.type] || THEME.success;

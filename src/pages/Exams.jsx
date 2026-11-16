@@ -147,9 +147,13 @@ export default function Exams() {
 
   const remove = async (id) => {
     if (!window.confirm('Delete this exam?')) return;
-    const { data } = await api.delete(`/exams/${id}`);
-    toast(data?.message || 'Exam deleted');
-    load();
+    try {
+      const { data } = await api.delete(`/exams/${id}`);
+      toast(data?.message || 'Exam deleted');
+      load();
+    } catch (err) {
+      toast(detailText(err, 'Delete failed'), 'error');
+    }
   };
 
   const filteredExams = exams.filter((exam) =>
