@@ -212,14 +212,14 @@ export default function Dashboard() {
             ]} />
           </Panel>
           <Panel title="Score trend — last 10">
-            <VBars rows={summary.trend.map((x) => ({
+            <VBars max={100} rows={summary.trend.map((x) => ({
               label: x.exam,
               short: x.exam.slice(0, 8),
               value: Math.round(x.percentage),
             }))} />
           </Panel>
           <Panel title="Average by course">
-            <HBars rows={summary.course_avg.map((c) => ({
+            <HBars max={100} rows={summary.course_avg.map((c) => ({
               label: c.course,
               value: c.avg,
               color: c.avg >= 60 ? '#22c55e' : c.avg >= 40 ? '#f59e0b' : '#ef4444',

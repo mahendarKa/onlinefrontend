@@ -68,7 +68,8 @@ export default function AdminDashboard() {
           <Donut slices={roleSlices} centerLabel="users" />
         </Panel>
         <Panel title="Attempts by status">
-          <HBars rows={attemptRows} />
+          <HBars rows={attemptRows}
+            max={attemptRows.reduce((s, r) => s + r.value, 0)} />
         </Panel>
         <Panel title="Results">
           <Donut centerLabel="results" slices={[
@@ -80,7 +81,8 @@ export default function AdminDashboard() {
       </div>
 
       <Panel title="Attempts started — last 7 days" className="mt-4">
-        <VBars rows={dayBars} />
+        <VBars rows={dayBars}
+          max={dayBars.reduce((s, r) => s + r.value, 0)} />
       </Panel>
     </div>
   );

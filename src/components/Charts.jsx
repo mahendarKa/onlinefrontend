@@ -76,9 +76,11 @@ export function Donut({ slices, size = 150, thickness = 20, centerLabel }) {
   );
 }
 
-// Horizontal labeled bars. rows: [{label, value, color}]
-export function HBars({ rows }) {
-  const max = Math.max(1, ...rows.map((r) => r.value));
+// Horizontal labeled bars. rows: [{label, value, color}].
+// Pass `max` to pin the scale (e.g. 100 for percentages); otherwise
+// bars scale relative to the largest row.
+export function HBars({ rows, max }) {
+  const peak = Math.max(1, max ?? 0, ...rows.map((r) => r.value));
   return (
     <div className="space-y-2.5">
       {rows.map((r) => (
@@ -89,7 +91,7 @@ export function HBars({ rows }) {
           </div>
           <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
             <div className="h-full rounded-full transition-all"
-              style={{ width: `${(r.value / max) * 100}%`, background: r.color }} />
+              style={{ width: `${Math.min(100, (r.value / peak) * 100)}%`, background: r.color }} />
           </div>
         </div>
       ))}
@@ -97,9 +99,11 @@ export function HBars({ rows }) {
   );
 }
 
-// Vertical mini bar chart. rows: [{label, value}]
-export function VBars({ rows, color = '#2563eb', height = 120 }) {
-  const max = Math.max(1, ...rows.map((r) => r.value));
+// Vertical mini bar chart. rows: [{label, value}].
+// Pass `max` to pin the scale (e.g. 100 for percentages, or the
+// series total for share-of-total); otherwise scales to the max row.
+export function VBars({ rows, color = '#2563eb', height = 120, max }) {
+  const peak = Math.max(1, max ?? 0, ...rows.map((r) => r.value));
   return (
     <div className="flex items-end gap-2" style={{ height }}>
       {rows.map((r) => (
@@ -109,7 +113,7 @@ export function VBars({ rows, color = '#2563eb', height = 120 }) {
           </span>
           <div className="w-full rounded-t-md"
             style={{
-              height: `${Math.max((r.value / max) * (height - 42), r.value ? 4 : 0)}px`,
+              height: `${Math.max((r.value / peak) * (height - 42), r.value ? 4 : 0)}px`,
               background: r.color || color,
             }} />
           <span className="text-[10px] text-gray-400 truncate w-full text-center"

@@ -90,10 +90,12 @@ export default function TeacherDashboard() {
           ]} />
         </Panel>
         <Panel title="Attempts by status">
-          <HBars rows={attemptRows} />
+          <HBars rows={attemptRows}
+            max={attemptRows.reduce((s, r) => s + r.value, 0)} />
         </Panel>
         <Panel title="Score distribution">
-          <VBars rows={distRows} />
+          <VBars rows={distRows}
+            max={distRows.reduce((s, r) => s + r.value, 0)} />
         </Panel>
       </div>
 
