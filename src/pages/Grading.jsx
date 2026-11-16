@@ -58,6 +58,7 @@ export default function Grading() {
         key,
         student_name: item.student_name,
         exam_id: item.exam_id,
+        attempt_no: item.attempt_number,
         items: [],
       };
       byAttempt.set(key, g);
@@ -126,6 +127,11 @@ export default function Grading() {
               className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 rounded">
               <span className="font-medium">
                 {group.student_name} — {examName(group.exam_id)}
+                {group.attempt_no && (
+                  <span className="ml-2 text-xs text-gray-500">
+                    Attempt #{group.attempt_no}
+                  </span>
+                )}
                 <span className="ml-2 text-xs bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">
                   {group.items.length} question{group.items.length === 1 ? '' : 's'}
                 </span>
