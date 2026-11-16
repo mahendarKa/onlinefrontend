@@ -24,10 +24,10 @@ const refreshBell = () =>
 // Fallback destinations for notifications stored before the `link`
 // column existed — resolved by the viewer's role.
 const STUDENT_LINKS = {
-  'exam.assigned': '/dashboard',
+  'exam.assigned': '/my-exams',
   'exam.expired': '/attempts',
   'result.published': '/results',
-  'batch.enrolled': '/dashboard',
+  'batch.enrolled': '/my-exams',
 };
 const STAFF_LINKS = {
   'exam.assigned': '/exams',

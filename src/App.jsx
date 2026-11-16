@@ -18,6 +18,7 @@ import Grading from './pages/Grading';
 import Monitoring from './pages/Monitoring';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StudentDashboard from './pages/student/Dashboard';
+import MyExams from './pages/student/MyExams';
 import ExamPlayer from './pages/student/ExamPlayer';
 import StudentResults from './pages/student/Results';
 import AttemptHistory from './pages/student/AttemptHistory';
@@ -78,6 +79,7 @@ export default function App() {
 
         {/* Student */}
         <Route path="/dashboard" element={<ProtectedRoute roles={['student']}><StudentDashboard /></ProtectedRoute>} />
+        <Route path="/my-exams" element={<ProtectedRoute roles={['student']}><MyExams /></ProtectedRoute>} />
         <Route path="/results" element={<ProtectedRoute roles={['student']}><StudentResults /></ProtectedRoute>} />
         <Route path="/attempts" element={<ProtectedRoute roles={['student']}><AttemptHistory /></ProtectedRoute>} />
 
