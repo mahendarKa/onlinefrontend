@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/client';
-import { apiDate } from '../utils/datetime';
+import { relTime } from '../utils/datetime';
 import { useAuth } from '../context/AuthContext';
 import Pagination, { usePager } from '../components/Pagination';
 import Loader from '../components/Loader';
@@ -14,10 +14,7 @@ const TYPE_STYLES = {
 };
 
 function fmt(dt) {
-  return apiDate(dt).toLocaleString(undefined, {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: 'numeric', minute: '2-digit', hour12: true,
-  });
+  return relTime(dt);
 }
 
 // Layout listens for this to refresh the bell badge instantly.
