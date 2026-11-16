@@ -109,7 +109,7 @@ export default function Grading() {
 
       {error && <p className="mb-3 text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>}
 
-      {loading && <Loader />}
+      {loading && pending.length === 0 && <Loader />}
 
       {!loading && pending.length === 0 && (
         <p className="text-gray-500 bg-white p-4 rounded shadow">Nothing pending evaluation.</p>
@@ -117,6 +117,13 @@ export default function Grading() {
 
       {!loading && pending.length > 0 && filtered.length === 0 && (
         <p className="text-gray-500 bg-white p-4 rounded shadow">No items match the current search/filters.</p>
+      )}
+
+      <div className="relative">
+      {loading && pending.length > 0 && (
+        <div className="absolute inset-0 z-10 bg-white/60 flex items-start justify-center pt-20">
+          <Loader label="Refreshing..." />
+        </div>
       )}
 
       {pg.items.map((group) => {
@@ -184,6 +191,7 @@ export default function Grading() {
         );
       })}
       <Pagination page={pg.page} pages={pg.pages} onChange={pg.setPage} />
+      </div>
     </div>
   );
 }
