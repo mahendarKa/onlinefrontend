@@ -346,7 +346,8 @@ export default function ExamDetail() {
                 }}
                 className="border rounded px-2 py-1.5 flex-1 text-sm">
                 <option value="">Select batch...</option>
-                {batches.filter((b) => !assignedBIds.has(b.id)).map((b) => (
+                {batches.filter((b) => b.course_id === exam.course_id
+                  && !assignedBIds.has(b.id)).map((b) => (
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
               </select>
