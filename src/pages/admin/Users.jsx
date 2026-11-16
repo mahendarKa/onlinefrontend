@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api, { fileUrl, detailText } from '../../api/client';
 import Pagination, { usePager } from '../../components/Pagination';
 import Loader from '../../components/Loader';
+import { toast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
 
 const EMPTY = { first_name: '', last_name: '', email: '', password: '', role: 'student', mobile_number: '', picFile: null };
@@ -95,6 +96,7 @@ export default function Users() {
       await api.post('/users/admin/create', payload);
       setForm(EMPTY);
       setShowForm(false);
+      toast('User created');
       load();
     } catch (err) {
       setFormError(detailText(err, 'Failed to create user'));
@@ -132,6 +134,7 @@ export default function Users() {
       if (editForm.picFile) payload.profile_pic = await uploadPic(editForm.picFile);
       await api.put(`/users/${editId}`, payload);
       setEditId(null);
+      toast('User updated');
       load();
     } catch (err) {
       setFormError(detailText(err, 'Update failed'));

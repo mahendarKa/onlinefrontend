@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { toApiUtc, toLocalInput } from '../utils/datetime';
 import Pagination, { usePager } from '../components/Pagination';
 import Loader from '../components/Loader';
+import { toast } from '../components/Toast';
 
 const EMPTY = {
   course_id: '',
@@ -94,9 +95,11 @@ export default function Exams() {
       if (editId) {
         await api.put(`/exams/${editId}`, payload);
         setMessage('Exam updated');
+        toast('Exam updated');
       } else {
         await api.post('/exams/', payload);
         setMessage('Exam created. Add questions to set its total marks.');
+        toast('Exam created');
       }
       setForm(EMPTY);
       setEditId(null);

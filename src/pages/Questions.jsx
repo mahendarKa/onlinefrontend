@@ -3,6 +3,7 @@ import api, { fileUrl, detailText } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import Pagination, { usePager } from '../components/Pagination';
 import Loader from '../components/Loader';
+import { toast } from '../components/Toast';
 
 const TYPES = [
   'multichoice', 'multiselect', 'truefalse', 'shortanswer',
@@ -712,6 +713,7 @@ export default function Questions() {
             payload,
           });
           setMessage('Change sent for admin approval');
+          toast('Change sent for admin approval');
           cancelEdit();
           load();
           return;
@@ -729,6 +731,7 @@ export default function Questions() {
         }
         await saveTypeConfig(editId);
         setMessage(`Question ${editId} updated`);
+        toast('Question updated');
         cancelEdit();
         load();
       } catch (err) {
@@ -869,6 +872,7 @@ export default function Questions() {
       }
 
       setMessage(`Question ${question.id} created`);
+      toast('Question created');
       // Keep category and type so adding multiple questions to the same
       // category doesn't require re-selecting them every time.
       setForm({ ...EMPTY_Q, category_id: form.category_id, type: form.type });
@@ -892,6 +896,7 @@ export default function Questions() {
       const { data } = await api.delete(`/questions/${id}`);
       if (data?.pending) {
         setMessage('Deletion sent for admin approval');
+        toast('Deletion sent for admin approval');
       }
       load();
     } catch (err) {

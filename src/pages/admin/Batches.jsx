@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api, { detailText } from '../../api/client';
 import Pagination, { usePager } from '../../components/Pagination';
 import Loader from '../../components/Loader';
+import { toast } from '../../components/Toast';
 
 const EMPTY_BATCH = { course_id: '', name: '', start_date: '', end_date: '', description: '' };
 
@@ -69,9 +70,11 @@ export default function Batches() {
       if (editId) {
         await api.put(`/batches/${editId}`, payload);
         setMessage('Batch updated');
+        toast('Batch updated');
       } else {
         await api.post('/batches/', payload);
         setMessage('Batch created successfully');
+        toast('Batch created');
       }
       setBatchForm(EMPTY_BATCH);
       setEditId(null);
