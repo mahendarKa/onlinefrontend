@@ -3,6 +3,7 @@ import api, { detailText } from '../../api/client';
 import Pagination, { usePager } from '../../components/Pagination';
 import Loader from '../../components/Loader';
 import { toast } from '../../components/Toast';
+import { useAuth } from '../../context/AuthContext';
 
 const EMPTY_BATCH = { course_id: '', name: '', start_date: '', end_date: '', description: '' };
 
@@ -24,6 +25,8 @@ export default function Batches() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const isSuperadmin = user?.role === 'superadmin';
 
   const load = async () => {
     const [b, c, s, t] = await Promise.all([
@@ -163,6 +166,18 @@ export default function Batches() {
     selectBatch(selected);
   };
 
+  const deleteBatch = async (b) => {
+    if (!window.confirm(`Delete batch "${b.name}"? This cannot be undone.`)) return;
+    try {
+      await api.delete(`/batches/${b.id}`);
+      if (selected?.id === b.id) setSelected(null);
+      setBatches((prev) => prev.filter((x) => x.id !== b.id));
+      toast('Batch deleted');
+    } catch (err) {
+      setError(detailText(err, 'Failed to delete batch'));
+    }
+  };
+
   const userName = (id) => {
     const u = [...students, ...teachers].find((x) => x.id === id);
     return u ? u.name : `#${id}`;
@@ -252,6 +267,10 @@ export default function Batches() {
                     className="text-blue-600 hover:underline">Manage</button>
                   <button onClick={() => startEdit(b)}
                     className="text-blue-600 hover:underline">Edit</button>
+                  {isSuperadmin && (
+                    <button onClick={() => deleteBatch(b)}
+                      className="text-red-600 hover:underline">Delete</button>
+                  )}
                 </td>
               </tr>
             ))}
