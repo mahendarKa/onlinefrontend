@@ -12,6 +12,7 @@ export default function Grading() {
   const [marks, setMarks] = useState({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -47,7 +48,25 @@ export default function Grading() {
       .some((f) => (f || '').toLowerCase().includes(q));
   });
 
-  const pg = usePager(filtered);
+  // Group the filtered items by attempt — one row per student+exam.
+  const groups = [];
+  const byAttempt = new Map();
+  filtered.forEach((item) => {
+    const key = item.attempt_id || `${item.student_id}-${item.exam_id}`;
+    if (!byAttempt.has(key)) {
+      const g = {
+        key,
+        student_name: item.student_name,
+        exam_id: item.exam_id,
+        items: [],
+      };
+      byAttempt.set(key, g);
+      groups.push(g);
+    }
+    byAttempt.get(key).items.push(item);
+  });
+
+  const pg = usePager(groups);
 
   const grade = async (item, isCorrect) => {
     setError('');
@@ -99,49 +118,65 @@ export default function Grading() {
         <p className="text-gray-500 bg-white p-4 rounded shadow">No items match the current search/filters.</p>
       )}
 
-      {pg.items.map((item) => (
-        <div key={item.answer_id} className="bg-white rounded shadow p-4 mb-3 text-sm">
-          <div className="flex justify-between mb-2">
-            <span className="font-medium">
-              {item.student_name} — {examName(item.exam_id)} · {item.question_type}
-            </span>
-            <span className="text-gray-500">max {item.maximum_marks} marks</span>
+      {pg.items.map((group) => {
+        const open = expanded === group.key;
+        return (
+          <div key={group.key} className="bg-white rounded shadow mb-3 text-sm">
+            <button onClick={() => setExpanded(open ? null : group.key)}
+              className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 rounded">
+              <span className="font-medium">
+                {group.student_name} — {examName(group.exam_id)}
+                <span className="ml-2 text-xs bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">
+                  {group.items.length} question{group.items.length === 1 ? '' : 's'}
+                </span>
+              </span>
+              <span className="text-gray-400 text-xs">{open ? '▲' : '▼'}</span>
+            </button>
+
+            {open && group.items.map((item) => (
+              <div key={item.answer_id} className="border-t p-4">
+                <div className="flex justify-between mb-2">
+                  <span className="text-xs text-gray-500 capitalize">{item.question_type}</span>
+                  <span className="text-gray-500">max {item.maximum_marks} marks</span>
+                </div>
+
+                <p className="font-medium mb-1">{item.question_text}</p>
+
+                {item.answer_text && (
+                  <p className="bg-gray-50 rounded p-2 mb-2 whitespace-pre-wrap">{item.answer_text}</p>
+                )}
+                {item.code_text && (
+                  <pre className="bg-gray-900 text-green-300 rounded p-2 mb-2 overflow-auto">{item.code_text}</pre>
+                )}
+                {item.match_answers && (
+                  <ul className="bg-gray-50 rounded p-2 mb-2">
+                    {Object.entries(item.match_answers).map(([k, v]) => (
+                      <li key={k}>{k} → {v}</li>
+                    ))}
+                  </ul>
+                )}
+                {item.answer_file && (
+                  <p className="text-blue-600 mb-2">File: {item.answer_file}</p>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number" step="0.5" min="0" max={item.maximum_marks}
+                    placeholder="Marks"
+                    value={marks[item.answer_id] ?? ''}
+                    onChange={(e) => setMarks({ ...marks, [item.answer_id]: e.target.value })}
+                    className="border rounded px-3 py-1.5 w-28"
+                  />
+                  <button onClick={() => grade(item, true)}
+                    className="bg-green-600 text-white px-3 py-1.5 rounded">Grade Correct</button>
+                  <button onClick={() => grade(item, false)}
+                    className="bg-orange-500 text-white px-3 py-1.5 rounded">Grade Wrong</button>
+                </div>
+              </div>
+            ))}
           </div>
-
-          <p className="font-medium mb-1">{item.question_text}</p>
-
-          {item.answer_text && (
-            <p className="bg-gray-50 rounded p-2 mb-2 whitespace-pre-wrap">{item.answer_text}</p>
-          )}
-          {item.code_text && (
-            <pre className="bg-gray-900 text-green-300 rounded p-2 mb-2 overflow-auto">{item.code_text}</pre>
-          )}
-          {item.match_answers && (
-            <ul className="bg-gray-50 rounded p-2 mb-2">
-              {Object.entries(item.match_answers).map(([k, v]) => (
-                <li key={k}>{k} → {v}</li>
-              ))}
-            </ul>
-          )}
-          {item.answer_file && (
-            <p className="text-blue-600 mb-2">File: {item.answer_file}</p>
-          )}
-
-          <div className="flex items-center gap-2">
-            <input
-              type="number" step="0.5" min="0" max={item.maximum_marks}
-              placeholder="Marks"
-              value={marks[item.answer_id] ?? ''}
-              onChange={(e) => setMarks({ ...marks, [item.answer_id]: e.target.value })}
-              className="border rounded px-3 py-1.5 w-28"
-            />
-            <button onClick={() => grade(item, true)}
-              className="bg-green-600 text-white px-3 py-1.5 rounded">Grade Correct</button>
-            <button onClick={() => grade(item, false)}
-              className="bg-orange-500 text-white px-3 py-1.5 rounded">Grade Wrong</button>
-          </div>
-        </div>
-      ))}
+        );
+      })}
       <Pagination page={pg.page} pages={pg.pages} onChange={pg.setPage} />
     </div>
   );
