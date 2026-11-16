@@ -148,6 +148,7 @@ export default function Exams() {
   const remove = async (id) => {
     if (!window.confirm('Delete this exam?')) return;
     await api.delete(`/exams/${id}`);
+    toast('Exam deleted');
     load();
   };
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api, { detailText } from '../../api/client';
 import Pagination, { usePager } from '../../components/Pagination';
 import Loader from '../../components/Loader';
+import { toast } from '../../components/Toast';
 
 const EMPTY = { name: '', code: '', description: '' };
 
@@ -60,6 +61,7 @@ export default function Courses() {
   const remove = async (id) => {
     if (!window.confirm('Delete this course?')) return;
     await api.delete(`/courses/${id}`);
+    toast('Course deleted');
     load();
   };
 

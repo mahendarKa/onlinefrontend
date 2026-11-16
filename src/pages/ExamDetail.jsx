@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { apiDate, toApiUtc, toLocalInput } from '../utils/datetime';
 import Pagination, { usePager } from '../components/Pagination';
 import Loader from '../components/Loader';
+import { toast } from '../components/Toast';
 
 const nowLocal = () => {
   const d = new Date();
@@ -160,6 +161,7 @@ export default function ExamDetail() {
 
   const removeQuestion = async (eqId) => {
     await api.delete(`/exams/${examId}/questions/${eqId}`);
+    toast('Question removed from exam');
     load();
   };
 
@@ -182,6 +184,7 @@ export default function ExamDetail() {
 
   const removeBatch = async (assignmentId) => {
     await api.delete(`/exams/${examId}/batches/${assignmentId}`);
+    toast('Batch removed from exam');
     load();
   };
 

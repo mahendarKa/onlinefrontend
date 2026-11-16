@@ -196,6 +196,7 @@ export default function Users() {
     if (!window.confirm('Delete this user? This cannot be undone.')) return;
     try {
       await api.delete(`/users/${id}`);
+      toast('User deleted');
       load();
     } catch (err) {
       setError(detailText(err, 'Delete failed'));

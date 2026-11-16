@@ -153,11 +153,13 @@ export default function Batches() {
 
   const removeStudent = async (enrollmentId) => {
     await api.delete(`/batch-students/${enrollmentId}`);
+    toast('Student removed from batch');
     selectBatch(selected);
   };
 
   const removeTeacher = async (assignmentId) => {
     await api.delete(`/batch-teachers/${assignmentId}`);
+    toast('Teacher removed from batch');
     selectBatch(selected);
   };
 

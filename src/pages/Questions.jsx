@@ -897,6 +897,8 @@ export default function Questions() {
       if (data?.pending) {
         setMessage('Deletion sent for admin approval');
         toast('Deletion sent for admin approval');
+      } else {
+        toast('Question deleted');
       }
       load();
     } catch (err) {
