@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/client';
-import { apiDate } from '../../utils/datetime';
+import { apiDate, relTime } from '../../utils/datetime';
 import Pagination, { usePager } from '../../components/Pagination';
 import Loader from '../../components/Loader';
 
@@ -70,7 +70,9 @@ export default function AttemptHistory() {
             <tr key={a.attempt_id} className="border-b">
               <td className="p-3">{a.exam_name}</td>
               <td>{a.attempt_number}</td>
-              <td>{a.start_time ? apiDate(a.start_time).toLocaleString() : '-'}</td>
+              <td title={a.start_time ? apiDate(a.start_time).toLocaleString() : undefined}>
+                {a.start_time ? relTime(a.start_time) : '-'}
+              </td>
               <td className="capitalize">{a.status}</td>
               <td>{a.total_marks ?? '-'}</td>
               <td>{a.percentage ?? '-'}</td>
