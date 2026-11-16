@@ -309,8 +309,10 @@ export default function Exams() {
                   className="text-gray-600 hover:underline">
                   {exam.is_active ? 'Deactivate' : 'Activate'}
                 </button>
-                <button onClick={() => remove(exam.id)}
-                  className="text-red-600 hover:underline">Delete</button>
+                {isAdminUser && (
+                  <button onClick={() => remove(exam.id)}
+                    className="text-red-600 hover:underline">Delete</button>
+                )}
               </td>
             </tr>
           ))}

@@ -196,6 +196,7 @@ export default function ExamDetail() {
     user.role === 'admin' || user.role === 'superadmin'
     || user.id === exam.created_by
   );
+  const isAdmin = user && ['admin', 'superadmin'].includes(user.role);
 
   const assignedQIds = new Set(examQuestions.map((x) => x.question_id));
   const assignedBIds = new Set(examBatches.map((x) => x.batch_id));
@@ -334,7 +335,7 @@ export default function ExamDetail() {
               <select required value={bForm.batch_id}
                 onChange={(e) => {
                   setBForm({ ...bForm, batch_id: e.target.value, graders: new Set() });
-                  ensureBatchTeachers(e.target.value);
+                  if (isAdmin) ensureBatchTeachers(e.target.value);
                 }}
                 className="border rounded px-2 py-1.5 flex-1 text-sm">
                 <option value="">Select batch...</option>
@@ -343,7 +344,7 @@ export default function ExamDetail() {
                 ))}
               </select>
             </div>
-            {(btMap[bForm.batch_id]?.length > 0) && (
+            {isAdmin && (btMap[bForm.batch_id]?.length > 0) && (
               <div className="border rounded p-2 mb-2 text-sm">
                 <p className="text-xs text-gray-500 mb-1">
                   Graders — tick to restrict grading to selected teachers
@@ -400,18 +401,20 @@ export default function ExamDetail() {
                       </td>
                       <td className="whitespace-nowrap">
                         {canEdit && (<>
-                          <button onClick={async () => {
-                            await ensureBatchTeachers(eb.batch_id);
-                            setEditSet(new Set(eb.grader_ids || []));
-                            setEditGraders(editGraders === eb.id ? null : eb.id);
-                          }}
-                            className="text-blue-600 hover:underline mr-2">Graders</button>
+                          {isAdmin && (
+                            <button onClick={async () => {
+                              await ensureBatchTeachers(eb.batch_id);
+                              setEditSet(new Set(eb.grader_ids || []));
+                              setEditGraders(editGraders === eb.id ? null : eb.id);
+                            }}
+                              className="text-blue-600 hover:underline mr-2">Graders</button>
+                          )}
                           <button onClick={() => removeBatch(eb.id)}
                             className="text-red-600 hover:underline">Remove</button>
                         </>)}
                       </td>
                     </tr>
-                    {canEdit && editGraders === eb.id && (
+                    {isAdmin && editGraders === eb.id && (
                       <tr className="border-b bg-gray-50">
                         <td colSpan="3" className="py-2 px-1">
                           {(btMap[eb.batch_id] || []).map((tid) => (
