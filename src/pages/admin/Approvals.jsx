@@ -147,6 +147,40 @@ function ImageStrip({ urls }) {
   );
 }
 
+// Details panel for exam requests (delete / grader change).
+function ExamRequestPanel({ request, teacherName }) {
+  if (request.action === 'delete') {
+    return (
+      <div className="border rounded p-3 bg-red-50/40 text-xs">
+        <p className="font-semibold text-red-700 mb-1">
+          This exam will be permanently deleted:
+        </p>
+        <p className="text-gray-700"><b>Name:</b> {request.exam_name}</p>
+      </div>
+    );
+  }
+  const names = (ids) => (ids?.length
+    ? ids.map(teacherName).join(', ')
+    : '(all batch teachers)');
+  return (
+    <div className="border rounded overflow-hidden text-xs">
+      <p className="bg-gray-50 px-3 py-1.5 font-semibold border-b">
+        Graders{request.batch_name ? ` — ${request.batch_name}` : ''}
+      </p>
+      <div className="grid grid-cols-2 divide-x">
+        <div className="p-3 bg-red-50/40">
+          <p className="font-semibold text-red-600 mb-1">Current</p>
+          <p className="text-gray-700">{names(request.current?.grader_ids)}</p>
+        </div>
+        <div className="p-3 bg-green-50/40">
+          <p className="font-semibold text-green-700 mb-1">Requested</p>
+          <p className="text-gray-700">{names(request.payload?.grader_ids)}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Expandable panel comparing `current` (server snapshot) with the
 // staged `payload`.
 function ChangesPanel({ request }) {
@@ -270,18 +304,36 @@ function ChangesPanel({ request }) {
 
 export default function Approvals() {
   const [requests, setRequests] = useState([]);
+  const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('pending');
   const [expanded, setExpanded] = useState(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
+  const teacherName = (id) =>
+    teachers.find((t) => t.id === id)?.name || `#${id}`;
+
   const load = useCallback(() => {
     setLoading(true);
-    api.get('/questions/change-requests', {
-      params: statusFilter ? { status: statusFilter } : {},
-    })
-      .then(({ data }) => setRequests(data))
+    const params = statusFilter ? { status: statusFilter } : {};
+    Promise.all([
+      api.get('/questions/change-requests', { params }),
+      api.get('/exams/change-requests', { params })
+        .catch(() => ({ data: [] })),
+      api.get('/users/', { params: { role: 'teacher' } })
+        .catch(() => ({ data: [] })),
+    ])
+      .then(([q, e, t]) => {
+        setTeachers(t.data);
+        setRequests(
+          [
+            ...q.data.map((r) => ({ ...r, _kind: 'question' })),
+            ...e.data.map((r) => ({ ...r, _kind: 'exam' })),
+          ].sort((a, b) =>
+            new Date(b.created_at || 0) - new Date(a.created_at || 0))
+        );
+      })
       .catch((err) => setError(detailText(err, 'Failed to load requests')))
       .finally(() => setLoading(false));
   }, [statusFilter]);
@@ -297,8 +349,9 @@ export default function Approvals() {
       ? window.prompt('Reason for rejection (optional)') || ''
       : '';
     try {
+      const base = r._kind === 'exam' ? '/exams' : '/questions';
       await api.post(
-        `/questions/change-requests/${r.id}/${action}`,
+        `${base}/change-requests/${r.id}/${action}`,
         action === 'reject' ? { note } : {}
       );
       setMessage(
@@ -316,7 +369,7 @@ export default function Approvals() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">Question Approvals</h1>
+        <h1 className="text-xl font-bold">Approvals</h1>
         <select value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           className="border rounded px-3 py-1.5 text-sm">
@@ -347,13 +400,19 @@ export default function Approvals() {
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 p-3">
                   <div className="min-w-0 flex-1">
                     <p className="font-medium truncate">
-                      #{r.question_id} — {r.question_name || '(deleted)'}
-                      <span className="ml-2 text-xs text-gray-400 capitalize">
-                        {r.question_type}
-                      </span>
+                      {r._kind === 'exam'
+                        ? <>Exam: {r.exam_name || `#${r.exam_id}`}</>
+                        : <>#{r.question_id} — {r.question_name || '(deleted)'}
+                           <span className="ml-2 text-xs text-gray-400 capitalize">
+                             {r.question_type}
+                           </span></>}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {r.action === 'delete' ? 'Delete request' : 'Edit request'}
+                      {r.action === 'delete'
+                        ? 'Delete request'
+                        : r._kind === 'exam'
+                          ? `Grader change request${r.batch_name ? ` — ${r.batch_name}` : ''}`
+                          : 'Edit request'}
                       {' by '}{r.requester_name || `#${r.requested_by}`}
                       {' · '}{r.created_at ? apiDate(r.created_at).toLocaleString() : ''}
                       {r.review_note ? ` · note: ${r.review_note}` : ''}
@@ -388,7 +447,10 @@ export default function Approvals() {
                 </div>
                 {open && (
                   <div className="border-t p-3">
-                    {r.current || r.action === 'delete' ? (
+                    {r._kind === 'exam' ? (
+                      <ExamRequestPanel
+                        request={r} teacherName={teacherName} />
+                    ) : r.current || r.action === 'delete' ? (
                       <ChangesPanel request={r} />
                     ) : (
                       <p className="text-xs text-gray-500 italic">

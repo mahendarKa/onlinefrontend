@@ -156,8 +156,12 @@ export default function Layout() {
     }
 
     const refreshApprovals = () =>
-      api.get('/questions/change-requests/count')
-        .then(({ data }) => setPendingApprovals(data.count))
+      Promise.all([
+        api.get('/questions/change-requests/count'),
+        api.get('/exams/change-requests/count'),
+      ])
+        .then(([q, e]) =>
+          setPendingApprovals(q.data.count + e.data.count))
         .catch(() => {});
     if (['admin', 'superadmin'].includes(user?.role)) {
       refreshApprovals();

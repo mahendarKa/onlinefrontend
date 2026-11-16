@@ -147,8 +147,8 @@ export default function Exams() {
 
   const remove = async (id) => {
     if (!window.confirm('Delete this exam?')) return;
-    await api.delete(`/exams/${id}`);
-    toast('Exam deleted');
+    const { data } = await api.delete(`/exams/${id}`);
+    toast(data?.message || 'Exam deleted');
     load();
   };
 
@@ -309,7 +309,7 @@ export default function Exams() {
                   className="text-gray-600 hover:underline">
                   {exam.is_active ? 'Deactivate' : 'Activate'}
                 </button>
-                {isAdminUser && (
+                {(isAdminUser || exam.created_by === user?.id) && (
                   <button onClick={() => remove(exam.id)}
                     className="text-red-600 hover:underline">Delete</button>
                 )}
