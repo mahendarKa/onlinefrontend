@@ -56,7 +56,7 @@ export default function Profile() {
     .filter(Boolean).join(' ');
 
   return (
-    <div className="max-w-xl">
+    <div className="max-w-xl mx-auto">
       <h1 className="text-xl font-bold mb-4">My Profile</h1>
       <div className="bg-white rounded shadow p-6">
         <div className="flex items-center gap-4 mb-6">
